@@ -1,0 +1,114 @@
+body {
+  margin: 0;
+  padding: 20px 20px;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  background-color: #555;
+  color: white;
+}
+
+h1 {
+  font-size: 20px;
+  color: white;
+}
+
+p {
+  color: white;
+  margin: 20px 0;
+}
+
+.quiz-grid {
+  display: grid;
+  grid-template-columns: 5fr 1fr 5fr;
+  vertical-align: middle;
+  align-items: center;
+  gap: 0px;
+}
+
+.quiz-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  font-size: 20px;
+}
+
+.gradient {
+  background: linear-gradient(
+    90deg,
+    rgb(53, 109, 151) 35%,
+    rgb(32, 54, 72) 100%
+  );
+  border-radius: 20px;
+  min-height: 200px;
+}
+
+.equals {
+  font-weight: bold;
+  font-size: 30px;
+  margin-top: -8px;
+}
+
+.input-char {
+  font-size: 30px;
+  width: 60px;
+  padding: 6px 6px;
+  padding-bottom: 10px;
+  line-height: 40px;
+  text-align: center;
+  border-radius: 12px;
+}
+
+.flex-center {
+  width: 100%;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  font-weight: bold;
+  margin-top: 20px;
+  font-size: 30px;
+}
+
+.new-letter {
+  display: block;
+  margin-top: 20px;
+  font-size: 20px;
+  font-size: 30px;
+  /* background-color: aquamarine; */
+  /* border: 1px solid #ccc;
+   */
+  border-radius: 12px;
+}
+
+.green {
+  color: rgb(72, 178, 72);
+}
+
+.red {
+  color: rgb(236, 104, 104);
+}
+
+.binary {
+  color: white;
+  font-weight: bold;
+  font-family: "Courier New", Courier, monospace;
+  letter-spacing: 4px;
+  font-size: 40px;
+}
+
+i.fa {
+  display: block;
+  font-size: 60px;
+}
+
+@media only screen and (max-width: 450px) {
+  .binary {
+    font-size: 25px;
+    letter-spacing: 3px;
+  }
+
+  .new-letter {
+    font-size: 25px;
+  }
+}
