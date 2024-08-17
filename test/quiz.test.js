@@ -19,18 +19,18 @@ it("Check Quiz Grades Answers Correctly", () => {
 
   expect(answer.length).toBe(0);
 
-  renderer.act(() => ui.props.context.newClick());
+  renderer.act(() => ui.props.quiz.newClick());
 
-  let char = binary2Char(ui.props.context.binary);
+  let char = binary2Char(ui.props.quiz.binary);
   let mockEvent = { currentTarget: { value: char } };
 
-  renderer.act(() => ui.props.context.charChange(mockEvent));
+  renderer.act(() => ui.props.quiz.charChange(mockEvent));
 
   root.findByType(CorrectIcon);
 
   mockEvent = { currentTarget: { value: "." } };
 
-  renderer.act(() => ui.props.context.charChange(mockEvent));
+  renderer.act(() => ui.props.quiz.charChange(mockEvent));
 
   root.findByType(IncorrectIcon);
 });

@@ -25,8 +25,17 @@ export const validateInput = (input: string) => {
   return getFirstChar(input).toLowerCase();
 };
 
+export const getResult = (char: string, binary: string) => {
+  return char === binary2Char(binary);
+};
+
 export const randomLowerCaseInt = () => {
   return random(97, 122);
+};
+
+export const randomBinary = () => {
+  let int = randomLowerCaseInt();
+  return int2Binary(int);
 };
 
 export const refClick = (ref: React.MutableRefObject<any>) => {

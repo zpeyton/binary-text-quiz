@@ -1,11 +1,15 @@
 import React from "react";
+import { INPUTCHARLABEL } from "./constants";
+import { QuizContext } from "./types";
 
 export const NewLetterBtn = (props) => {
+  let { newBtn, newClick } = props.quiz as QuizContext;
+
   return (
     <button
       className="new-letter btn btn-primary"
-      ref={props.context.newBtn}
-      onClick={props.context.newClick}
+      ref={newBtn}
+      onClick={newClick}
     >
       New Binary Code
     </button>
@@ -13,12 +17,14 @@ export const NewLetterBtn = (props) => {
 };
 
 export const InputLetter = (props) => {
+  let { inputChar, binary, char, charChange } = props.quiz as QuizContext;
   return (
     <input
       className="input-char"
-      ref={props.context.inputChar}
-      value={props.context.char}
-      onChange={props.context.charChange}
+      ref={inputChar}
+      aria-label={INPUTCHARLABEL + binary}
+      value={char}
+      onChange={charChange}
     />
   );
 };

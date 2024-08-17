@@ -102,6 +102,10 @@ i.fa {
   font-size: 60px;
 }
 
+footer {
+  margin: 40px 0px;
+}
+
 @media only screen and (max-width: 450px) {
   .binary {
     font-size: 25px;

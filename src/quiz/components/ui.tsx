@@ -1,7 +1,9 @@
 import React from "react";
-import { CORRECT, DESCRIPTION, H1, INCORRECT } from "./constants";
+import { CORRECT, DESCRIPTION, H1, INCORRECT, VERSION } from "./constants";
 import { InputLetter, NewLetterBtn } from "./form";
 import { CorrectIcon, IncorrectIcon } from "./icons";
+import { QuizContext } from "./types";
+import { useSelector } from "react-redux";
 
 export const Header = () => {
   return (
@@ -12,8 +14,45 @@ export const Header = () => {
   );
 };
 
+export const Footer = () => {
+  return <footer>v {VERSION}</footer>;
+};
+
 export const Grid = (props) => {
   return <div className="quiz-grid">{props.children}</div>;
+};
+
+export const GridRow = (props) => {
+  let quiz = props.quiz as QuizContext;
+
+  return (
+    <Grid>
+      <Col type="gradient">
+        {/* <quiz.InputLetter /> */}
+        <InputLetter quiz={quiz} />
+      </Col>
+      <Col type="equals">=</Col>
+      <Col type="gradient">
+        <Binary binary={quiz.binary} />
+      </Col>
+    </Grid>
+  );
+};
+
+export const Result = (props) => {
+  let { quiz } = props;
+  let { char, result } = props.quiz as QuizContext;
+  return (
+    <FlexCenter>{char ? <AnswerMessage result={result} /> : null}</FlexCenter>
+  );
+};
+
+export const NewRow = (props) => {
+  return (
+    <FlexCenter>
+      <NewLetterBtn quiz={props.quiz} />
+    </FlexCenter>
+  );
 };
 
 export const Col = (props) => {
@@ -25,37 +64,54 @@ export const FlexCenter = (props) => {
 };
 
 export const Binary = (props) => {
-  return <div className="binary">{props.context.binary}</div>;
+  return <div className="binary">{props.binary}</div>;
 };
 
-export const AnswerMessage = (props) => {
+export const Alert = (props) => {
+  return <div role="alert">{props.message}</div>;
+};
+
+export const CorrectUI = () => {
   return (
-    <div className={props.context.result ? "green" : "red"}>
-      {props.context.result ? <CorrectIcon /> : <IncorrectIcon />}
-      {props.context.result ? CORRECT : INCORRECT}
+    <div className="green">
+      <CorrectIcon />
+      <Alert message={CORRECT} />
     </div>
   );
 };
 
+export const IncorrectUI = () => {
+  return (
+    <div className="red">
+      <IncorrectIcon />
+      <Alert message={INCORRECT} />
+    </div>
+  );
+};
+
+export const AnswerMessage = (props) => {
+  return props.result ? <CorrectUI /> : <IncorrectUI />;
+};
+
+export const Content = (props) => {
+  let { quiz } = props;
+
+  return (
+    <>
+      <GridRow quiz={quiz} />
+      <Result quiz={quiz} />
+      <NewRow quiz={quiz} />
+    </>
+  );
+};
+
 export const UI = (props) => {
+  let { quiz } = props;
   return (
     <>
       <Header />
-      <Grid>
-        <Col type="gradient">
-          <InputLetter context={props.context} />
-        </Col>
-        <Col type="equals">=</Col>
-        <Col type="gradient">
-          <Binary context={props.context} />
-        </Col>
-      </Grid>
-      <FlexCenter>
-        {props.context.char ? <AnswerMessage context={props.context} /> : null}
-      </FlexCenter>
-      <FlexCenter>
-        <NewLetterBtn context={props.context} />
-      </FlexCenter>
+      <Content quiz={quiz} />
+      <Footer />
     </>
   );
 };

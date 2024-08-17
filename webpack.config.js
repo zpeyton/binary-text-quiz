@@ -4,6 +4,7 @@ var BomPlugin = require("webpack-utf8-bom");
 const webpack = require("webpack");
 require("dotenv").config();
 var webpackMajorVersion = require("./package.json").version;
+
 module.exports = {
   mode: process.env.NODE_ENV === "production" ? "production" : "development",
   entry: {

@@ -1,22 +1,21 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  int2Binary,
-  binary2Char,
-  randomLowerCaseInt,
   refClick,
   refFocus,
+  randomBinary,
+  getResult,
   validateInput,
 } from "./utils";
 import { UI } from "./ui";
-import { FormEvent } from "./types";
+import { FormEvent, QuizContext } from "./types";
 
 export const Quiz = () => {
   let [char, setChar] = useState("");
   let [binary, setBinary] = useState("");
   let [result, setResult] = useState(false);
 
-  let newBtn = useRef<HTMLButtonElement>();
-  let inputChar = useRef<HTMLInputElement>();
+  let newBtn = useRef();
+  let inputChar = useRef();
 
   let init = () => {
     refClick(newBtn);
@@ -25,8 +24,7 @@ export const Quiz = () => {
   useEffect(init, []);
 
   const newClick = (event: FormEvent) => {
-    let int = randomLowerCaseInt();
-    let binary = int2Binary(int);
+    let binary = randomBinary();
     setBinary(binary);
     setChar("");
     refFocus(inputChar);
@@ -34,13 +32,12 @@ export const Quiz = () => {
 
   const charChange = (event: FormEvent) => {
     let value = validateInput(event.currentTarget.value);
-    let char = binary2Char(binary);
-    let result = value == char;
+    let result = getResult(value, binary);
     setResult(result);
     setChar(value);
   };
 
-  let context = {
+  let context: QuizContext = {
     binary,
     char,
     inputChar,
@@ -50,5 +47,5 @@ export const Quiz = () => {
     result,
   };
 
-  return <UI context={context} />;
+  return <UI quiz={context} />;
 };
