@@ -3,7 +3,6 @@ import { CORRECT, DESCRIPTION, H1, INCORRECT, VERSION } from "./constants";
 import { InputLetter, NewLetterBtn } from "./form";
 import { CorrectIcon, IncorrectIcon } from "./icons";
 import { QuizContext } from "./types";
-import { useSelector } from "react-redux";
 
 export const Header = () => {
   return (
@@ -40,7 +39,6 @@ export const GridRow = (props) => {
 };
 
 export const Result = (props) => {
-  let { quiz } = props;
   let { char, result } = props.quiz as QuizContext;
   return (
     <FlexCenter>{char ? <AnswerMessage result={result} /> : null}</FlexCenter>

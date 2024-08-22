@@ -1,6 +1,5 @@
 import { Router } from "../../router";
-import { validateAuthHeader } from "../../utils/auth";
-import { clientError, ok, parseUrlParams } from "../../utils/response";
+import { clientError, ok } from "../../utils/response";
 
 export class Contacts {
   get = async (router: Router) => {
@@ -13,11 +12,12 @@ export class Contacts {
     if (router.urlParams.id) {
       return ok({
         status: "ok",
-        data: { contact: mockContacts[router.urlParams.id] },
+        data: {
+          contact: mockContacts[router.urlParams.id],
+        },
       });
     }
 
-    //let json = JSON.parse();
     return ok({ status: "ok", data: { contacts: mockContacts } });
   };
 
@@ -38,8 +38,6 @@ export class Contacts {
   };
 
   put = (router: Router) => {
-    //let params = parseUrlParams("/contacts/:id", router.req.url);
-    // router.urlParams
     if (!router.urlParams.id) {
       return clientError({
         status: "fail",

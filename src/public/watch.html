@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <!-- This adapter normalizes cross-browser differences in WebRTC APIs. Currently necessary in order to support Firefox. -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/8.1.2/adapter.min.js"
+      integrity="sha512-l40eBFtXx+ve5RryIELC3y6/OM6Nu89mLGQd7fg1C93tN6XrkC3supb+/YiD/Y+B8P37kdJjtG1MT1kOO2VzxA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+  </head>
+  <body>
+    <h4>Watch video using WHEP</h4>
+    <video id="input-video" autoplay muted controls></video>
+
+    <script type="module">
+      import WHEPClient from "./WHEPClient.js";
+
+      const url =
+        "https://customer-aria4pdgkvgu9z0v.cloudflarestream.com/0dbe52278517838e32dbff6f59cc3e82/webRTC/play";
+      const videoElement = document.getElementById("input-video");
+
+      self.client = new WHEPClient(url, videoElement);
+    </script>
+
+    <div style="position: relative; padding-top: 56.25%">
+      <iframe
+        src="https://customer-aria4pdgkvgu9z0v.cloudflarestream.com/0dbe52278517838e32dbff6f59cc3e82/iframe"
+        style="
+          border: none;
+          position: absolute;
+          top: 0;
+          left: 0;
+          height: 100%;
+          width: 100%;
+        "
+        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+        allowfullscreen="true"
+      ></iframe>
+    </div>
+  </body>
+</html>

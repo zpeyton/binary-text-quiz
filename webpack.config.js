@@ -5,20 +5,8 @@ const webpack = require("webpack");
 require("dotenv").config();
 var webpackMajorVersion = require("./package.json").version;
 
-module.exports = {
+let commonConfig = {
   mode: process.env.NODE_ENV === "production" ? "production" : "development",
-  entry: {
-    quiz: "./src/quiz/index.tsx",
-  },
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: "./src/public/index.html",
-      filename: "index.html",
-      chunks: ["quiz"],
-    }),
-    new webpack.EnvironmentPlugin({}),
-    process.env.NODE_ENV === "production" ? new BomPlugin(true) : false,
-  ],
   module: {
     rules: [
       {
@@ -43,9 +31,28 @@ module.exports = {
       buffer: false,
     },
   },
+};
+
+var asgConfig = Object.assign({}, commonConfig, {
+  entry: {
+    asg: "./src/asg/index.tsx",
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: "./src/public/asg/index.html",
+      //publicPath: "asg",
+      filename: "index.html",
+      chunks: ["asg"],
+    }),
+    new webpack.EnvironmentPlugin({
+      NODE_ENV: process.env.NODE_ENV,
+    }),
+    // process.env.NODE_ENV === "production" ? new BomPlugin(true) : false,
+  ],
+
   output: {
-    filename: "[name].bundle-" + webpackMajorVersion + ".js",
-    path: path.resolve(__dirname, "build"),
+    filename: "asg.bundle-" + webpackMajorVersion + ".js",
+    path: path.resolve(__dirname, "build/asg"),
     clean: true,
   },
   devServer: {
@@ -56,4 +63,29 @@ module.exports = {
       directory: path.join(__dirname, "src/public"),
     },
   },
-};
+});
+
+var quizConfig = Object.assign({}, commonConfig, {
+  entry: {
+    quiz: "./src/quiz/index.tsx",
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: "./src/public/quiz/index.html",
+      filename: "index.html",
+      chunks: ["quiz"],
+    }),
+    new webpack.EnvironmentPlugin({
+      NODE_ENV: process.env.NODE_ENV,
+    }),
+    // process.env.NODE_ENV === "production" ? new BomPlugin(true) : false,
+  ],
+
+  output: {
+    filename: "quiz.bundle-" + webpackMajorVersion + ".js",
+    path: path.resolve(__dirname, "build/quiz"),
+    clean: true,
+  },
+});
+
+module.exports = [asgConfig, quizConfig];

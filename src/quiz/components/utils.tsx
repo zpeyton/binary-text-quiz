@@ -39,9 +39,11 @@ export const randomBinary = () => {
 };
 
 export const refClick = (ref: React.MutableRefObject<any>) => {
+  console.log("refClick");
   return ref.current?.click();
 };
 
 export const refFocus = (ref: React.MutableRefObject<any>) => {
+  console.log("refFocus");
   return ref.current?.focus();
 };

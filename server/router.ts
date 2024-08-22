@@ -13,6 +13,7 @@ export class Router {
   routes;
   defaults = {
     moduleName: "home",
+    db: null,
   };
   defaultCodes = {
     OK: { statusCode: 200 },
@@ -62,7 +63,7 @@ export class Router {
       console.log("[Router.import]", path);
       return this.module;
     } catch (e) {
-      console.log("[Router.import]", path, e.code);
+      console.log("[Router.import]", path, e);
     }
     return false;
   }
@@ -134,7 +135,8 @@ export class Router {
   }
 
   async execMiddleware() {
-    console.log("[Router.execMiddleware]");
+    // console.log("[Router.execMiddleware]");
+
     this.req.body = await this.body();
 
     for (let i in this.middleware) {
