@@ -29,10 +29,16 @@ export class API {
       headers,
     };
 
-    let res = await fetch(config.url, fetchConfig);
-    let resJson = await res.json();
-    console.log("[API]", resJson);
-    return resJson;
+    let res, resJson;
+    try {
+      res = await fetch(config.url, fetchConfig);
+      resJson = await res.json();
+      console.log("[API]", resJson);
+      return resJson;
+    } catch (e) {
+      console.log("[API]", e);
+      return { status: "fail" };
+    }
   }
 }
 
@@ -50,7 +56,15 @@ export const tokenAPI = async (token) => {
 export const test404API = async () => {
   let config = {
     url: "/asdf",
-    method: "GET",
+  };
+
+  let res = await new API().call(config);
+  return res;
+};
+
+export const disconnectAPI = async () => {
+  let config = {
+    url: "/disconnect",
   };
 
   let res = await new API().call(config);
@@ -68,9 +82,20 @@ export const loginAPI = async (creds) => {
   return res;
 };
 
+export const signupAPI = async (user) => {
+  let config = {
+    url: "/signup",
+    method: "POST",
+    body: user,
+  };
+
+  let res = await new API().call(config);
+  return res;
+};
+
 export const getWatchUrlAPI = async () => {
   let res = await new API().call({ url: "/watch" });
-  return (res as any).data.watch;
+  return res.data.watch;
 };
 
 export const getPublishUrlAPI = async () => {
@@ -80,7 +105,8 @@ export const getPublishUrlAPI = async () => {
 
 export const getChatsAPI = async (lastId) => {
   let query = "?date=" + lastId;
-  let res = await new API().call({ url: "/messages" + query });
+  let config = { url: "/messages" + query };
+  let res = await new API().call(config);
   return res;
 };
 

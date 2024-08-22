@@ -2,12 +2,13 @@ import React, { LegacyRef, useEffect, useRef, useState } from "react";
 import WHEPClient from "../public/WHEPClient";
 import WHIPClient from "../public/WHIPClient";
 import {
+  disconnectAPI,
   getChatsAPI,
   getPublishUrlAPI,
   getWatchUrlAPI,
   loginAPI,
   sendChatAPI,
-  test404API,
+  signupAPI,
   tokenAPI,
 } from "../asg-shared/api";
 
@@ -17,10 +18,24 @@ export const App = () => {
   let [user, setUser] = useState<any>({});
   let [client, setClient] = useState<any>({});
   let [loginNotice, setLoginNotice] = useState<any>("");
+  let [signupNotice, setSignupNotice] = useState<any>("");
   let videoEl = useRef<HTMLVideoElement>();
+  let inputChat = useRef<HTMLInputElement>();
+  let btnSendChat = useRef<HTMLButtonElement>();
+  let chatLog = useRef<HTMLDivElement>();
 
-  (window as any).onunload = async () => {
-    await (window as any).streamClient.disconnectStream();
+  let cleanupStreamClient = async () => {
+    await (window as any).streamClient.peerConnection.close();
+    if ((window as any).streamClient?.disconnectStream) {
+      await (window as any).streamClient?.disconnectStream();
+    }
+
+    (window as any).streamClient = null;
+  };
+  window.onbeforeunload = async () => {
+    console.log("onbeforeunload");
+    await cleanupStreamClient();
+    await disconnectAPI();
   };
 
   let authUser = async (creds?) => {
@@ -34,23 +49,20 @@ export const App = () => {
         setLoginNotice("Login Required - Token Expired");
         setUser({});
         setVideo(false);
-        await (window as any).streamClient.disconnectStream();
-        (window as any).streamClient = null;
+        await cleanupStreamClient();
         localStorage.setItem("authToken", "");
-
         return;
       }
+      setLoginNotice("");
       setUser(user);
       return;
     }
 
-    // let username = prompt("What's your username?");
-    // let password = prompt("What's your password?");
     if (!creds) {
-      console.log("Login");
+      // console.log("Login");
       setLoginNotice("Login");
       setUser({});
-      (window as any).streamClient = null;
+      await cleanupStreamClient();
       return;
     }
 
@@ -80,21 +92,20 @@ export const App = () => {
     let url = await getPublishUrlAPI();
     if ((window as any).streamClient) {
       console.log("setupWHIPClient a stream client already exists");
-
       return;
     }
     let streamClient = new WHIPClient(url, videoEl.current);
     (window as any).streamClient = streamClient;
     streamClient.peerConnection.addEventListener(
       "connectionstatechange",
-      () => {
+      async () => {
         console.log(
           "connectionstatechange",
           streamClient.peerConnection.connectionState
         );
         if (streamClient.peerConnection.connectionState == "disconnected") {
           setVideo(false);
-          (window as any).streamClient = null;
+          await cleanupStreamClient();
           setupWHIPClient();
         }
         if (streamClient.peerConnection.connectionState == "connected") {
@@ -113,15 +124,22 @@ export const App = () => {
     return;
   };
 
-  let setupWHEPClient = async () => {
-    let url = await getWatchUrlAPI();
-    if ((window as any).streamClient) {
+  let setupWHEPClient = async (url?) => {
+    if (!url) {
+      url = await getWatchUrlAPI();
     }
+
+    if ((window as any).streamClient) {
+      console.log("setupWHEPClient a stream client already exists");
+      return;
+    }
+
     let streamClient = new WHEPClient(url, videoEl.current);
     (window as any).streamClient = streamClient;
+    console.log("streamClient", streamClient);
     streamClient.peerConnection.addEventListener(
       "connectionstatechange",
-      () => {
+      async () => {
         console.log(
           "connectionstatechange",
           streamClient.peerConnection.connectionState
@@ -133,10 +151,10 @@ export const App = () => {
         ) {
           setVideo(false);
           if (videoEl.current) {
-            streamClient.stream;
+            await cleanupStreamClient();
             videoEl.current.srcObject = null;
           }
-          setupWHEPClient();
+          await setupWHEPClient(url);
         }
         if (streamClient.peerConnection.connectionState == "connected") {
           if (videoEl.current) {
@@ -183,7 +201,7 @@ export const App = () => {
   }, []);
 
   useEffect(() => {
-    console.log("User changed");
+    // console.log("User changed");
     if (!user.type) {
       return;
     }
@@ -193,11 +211,9 @@ export const App = () => {
     } else {
       setupWHEPClient();
     }
-  }, [user]);
 
-  let inputChat = useRef<HTMLInputElement>();
-  let btnSendChat = useRef<HTMLButtonElement>();
-  let chatLog = useRef<HTMLDivElement>();
+    inputChat.current?.focus();
+  }, [user]);
 
   const sendChat = async () => {
     if (!inputChat.current) {
@@ -221,7 +237,9 @@ export const App = () => {
 
   const getNewChats = async () => {
     //console.log("[getNewChats]", chats, chatLog.current?.innerHTML);
-
+    if (!user) {
+      return;
+    }
     if (chatLog.current?.innerHTML && !chats.length) {
       console.log(
         "Somehow we have loaded chats but the state is not current in this call??"
@@ -235,7 +253,9 @@ export const App = () => {
     let getNewChats = await getChatsAPI(lastChatId);
 
     if (getNewChats.status == "fail") {
-      authUser();
+      if (!loginNotice) {
+        authUser();
+      }
       return;
     }
 
@@ -246,6 +266,117 @@ export const App = () => {
       setChats(concat);
       return;
     }
+  };
+
+  const SignupUI = (props) => {
+    let usernameRef = useRef<HTMLInputElement>();
+    let passwordRef = useRef<HTMLInputElement>();
+    let emailRef = useRef<HTMLInputElement>();
+    let [errors, setErrors] = useState<any>([]);
+
+    let inputKeyDown = (event) => {
+      if (event.keyCode == 13) {
+        signupSubmit();
+      }
+    };
+
+    // useEffect(() => {
+    //   usernameRef?.current?.focus();
+    // });
+
+    let signupSubmit = async () => {
+      if (!emailRef.current || !usernameRef.current || !passwordRef.current) {
+        return;
+      }
+
+      let email = emailRef.current.value;
+      let username = usernameRef.current.value;
+      let password = passwordRef.current.value;
+      let errorsList: any = [];
+      if (!username) {
+        setErrors(errorsList.push({ type: "username" }));
+      }
+
+      if (!email) {
+        setErrors(errorsList.push({ type: "email" }));
+      }
+
+      if (!password) {
+        setErrors(errorsList.push({ type: "password" }));
+      }
+
+      if (errorsList.length) {
+        setErrors(errorsList);
+        return;
+      }
+
+      //props.signup();
+
+      let res = await signupAPI({ email, username, password });
+
+      if (res.status == "fail") {
+        console.log("Sign up fail");
+        // setSignupNotice(res.message);
+        setErrors([{ type: "general", message: res.message }]);
+        return;
+      }
+
+      // after sign up we should return an auth_token so we can auth
+      if (res.data.user.authToken) {
+        localStorage.setItem("authToken", res.data.user.authToken);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        props.authUser();
+      }
+    };
+
+    return 1 ? (
+      <div>
+        Become a member
+        <p>
+          {/* {errors.map((item) => {
+            return item.type;
+          })} */}
+          <input
+            ref={emailRef as LegacyRef<HTMLInputElement> | undefined}
+            name="email"
+            placeholder="email"
+            onKeyDown={inputKeyDown}
+          />
+          {errors.some((item) => item.type == "email") ? (
+            <p>Missing Email</p>
+          ) : null}
+        </p>
+        <p>
+          {/* {errors.map((item) => {
+            return item.type;
+          })} */}
+          <input
+            ref={usernameRef as LegacyRef<HTMLInputElement> | undefined}
+            name="username"
+            placeholder="username"
+            onKeyDown={inputKeyDown}
+          />
+          {errors.some((item) => item.type == "username") ? (
+            <p>Missing username</p>
+          ) : null}
+        </p>
+        <p>
+          <input
+            onKeyDown={inputKeyDown}
+            ref={passwordRef as LegacyRef<HTMLInputElement> | undefined}
+            name="password"
+            placeholder="password"
+          />
+        </p>
+        {errors.some((item) => item.type == "password") ? (
+          <p>Missing Password</p>
+        ) : null}
+        {errors.some((item) => item.type == "general") ? (
+          <p>{errors[0].message}</p>
+        ) : null}
+        <button onClick={signupSubmit}>Join</button>
+      </div>
+    ) : null;
   };
 
   const LoginUI = (props) => {
@@ -287,7 +418,7 @@ export const App = () => {
       props.authUser({ username, password });
     };
     return props.notice ? (
-      <>
+      <div>
         {props.notice}
         <p>
           {/* {errors.map((item) => {
@@ -315,7 +446,7 @@ export const App = () => {
           <p>Missing Password</p>
         ) : null}
         <button onClick={loginSubmit}>Login</button>
-      </>
+      </div>
     ) : null;
   };
 
@@ -347,15 +478,17 @@ export const App = () => {
   return (
     <>
       <div className="page">
-        {user.type ? <Timer callback={getNewChats} /> : null}
         {user.type == "stream" ? null : (
           <>
             {video ? null : (
               <div className="waiting">
                 {loginNotice ? (
-                  <LoginUI notice={loginNotice} authUser={authUser} />
+                  <>
+                    <LoginUI notice={loginNotice} authUser={authUser} />
+                    <SignupUI notice={signupNotice} authUser={authUser} />
+                  </>
                 ) : (
-                  "Waiting for live feed..."
+                  <div>Waiting for live feed...</div>
                 )}
               </div>
             )}
@@ -363,6 +496,7 @@ export const App = () => {
         )}
         {user.type ? (
           <>
+            <Timer callback={getNewChats} />
             <video
               ref={videoEl as LegacyRef<HTMLVideoElement> | undefined}
               id="watch"
@@ -378,6 +512,7 @@ export const App = () => {
                 <div>
                   <input
                     name="message"
+                    placeholder={user.username}
                     ref={inputChat as LegacyRef<HTMLInputElement> | undefined}
                     onKeyDown={chatKeyDown}
                   />

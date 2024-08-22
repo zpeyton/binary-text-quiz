@@ -43,6 +43,8 @@ video {
 .waiting {
   padding: 20px;
   background-color: #c55959;
+  display: grid;
+  grid-template-columns: auto auto;
 }
 
 .chat {

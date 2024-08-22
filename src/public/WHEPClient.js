@@ -36,10 +36,10 @@ export default class WHEPClient {
      * https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/track_event
      */
     this.peerConnection.ontrack = (event) => {
-      console.log("ontrack track " + event);
+      //console.log("ontrack track " + event);
 
       const track = event.track;
-      console.log("got track " + track);
+      //console.log("got track " + track);
 
       const currentTracks = this.stream.getTracks();
       const streamAlreadyHasVideoTrack = currentTracks.some(
@@ -77,7 +77,9 @@ export default class WHEPClient {
     //     this.videoElement.srcObject = this.stream;
     //   }
     //});
+
     this.peerConnection.addEventListener("negotiationneeded", (ev) => {
+      console.log("negotiationneeded");
       negotiateConnectionWithClientOffer(this.peerConnection, this.endpoint);
     });
   }
