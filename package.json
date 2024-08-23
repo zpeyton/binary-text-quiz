@@ -8,11 +8,14 @@
     "dev": "npx webpack-dev-server",
     "build": "npx webpack --node-env production --config webpack.config.js",
     "deployquiz": "rsync -avze ssh ./build/quiz/* zapteck:public_html/binary-quiz",
-    "deployasg": "rsync -avze ssh ./build/asg/* zapteck:public_html/alohasurfgirls.com/live/"
+    "deployasg": "rsync -avze ssh ./build/asg/* zapteck:public_html/alohasurfgirls.com/live/",
+    "deploy-apple-domain-association": "rsync -avze ssh ./apple-developer-merchantid-domain-association zapteck:public_html/alohasurfgirls.com/.well-known/"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@stripe/react-stripe-js": "^2.8.0",
+    "@stripe/stripe-js": "^4.3.0",
     "dotenv": "^16.0.1",
     "lodash": "^4.17.21",
     "moment": "^2.30.1",

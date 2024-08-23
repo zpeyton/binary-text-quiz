@@ -46,6 +46,8 @@ var asgConfig = Object.assign({}, commonConfig, {
     }),
     new webpack.EnvironmentPlugin({
       NODE_ENV: process.env.NODE_ENV,
+      STRIPE_PUBLISHABLE_KEY_DEV: process.env.STRIPE_PUBLISHABLE_KEY_DEV,
+      STRIPE_PUBLISHABLE_KEY_PROD: process.env.STRIPE_PUBLISHABLE_KEY_PROD,
     }),
     // process.env.NODE_ENV === "production" ? new BomPlugin(true) : false,
   ],
@@ -58,7 +60,8 @@ var asgConfig = Object.assign({}, commonConfig, {
   devServer: {
     hot: true,
     host: "localhost",
-    port: 8080,
+    server: "spdy",
+    port: 443,
     static: {
       directory: path.join(__dirname, "src/public"),
     },

@@ -24,6 +24,34 @@ video {
   padding: 0px;
 }
 
+.stripe-form {
+  /* width: calc(100vw - 40px); */
+  /* margin-top: 20px; */
+  margin-left: 20px;
+  margin-right: 20px;
+  margin-bottom: 20px;
+}
+
+.stripe-form .amount {
+  margin-bottom: 20px;
+}
+
+.stripe-form-submit {
+  margin-top: 20px;
+}
+
+.StripeElement {
+  width: 100%;
+}
+
+.tip {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #c55959;
+  /* padding: 20px; */
+}
+
 .chat-ui {
   /* padding: 10px; */
   width: 100%;

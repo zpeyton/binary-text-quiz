@@ -1,11 +1,17 @@
 import { random } from "lodash";
 
+let ENV = process.env.NODE_ENV;
 let APIRoot =
-  process.env.NODE_ENV == "development"
-    ? "http://localhost:8787"
+  ENV == "development"
+    ? "https://localhost:8787"
     : "https://asg-test.zapteck.workers.dev";
 
-console.log("APIRoot", process.env.NODE_ENV, APIRoot);
+console.log("APIRoot", APIRoot);
+
+let dev = process.env.STRIPE_PUBLISHABLE_KEY_DEV;
+let prod = process.env.STRIPE_PUBLISHABLE_KEY_PROD;
+
+export const STRIPE_PUBLISHABLE_KEY = ENV == "development" ? dev : prod;
 
 export class API {
   async call(config) {
@@ -115,6 +121,37 @@ export const sendChatAPI = async (message) => {
     url: "/messages",
     method: "POST",
     body: { message },
+  };
+
+  let res = await new API().call(config);
+  return res;
+};
+
+export const sendTipAPI = async (amount) => {
+  let config = {
+    url: "/tips",
+    method: "POST",
+    body: amount,
+  };
+
+  let res = await new API().call(config);
+  return res;
+};
+
+export const addFundsAPI = async (amount) => {
+  let config = {
+    url: "/funds",
+    method: "POST",
+    body: amount,
+  };
+
+  let res = await new API().call(config);
+  return res;
+};
+
+export const getPaymentMethodsAPI = async () => {
+  let config = {
+    url: "/payment-methods",
   };
 
   let res = await new API().call(config);
