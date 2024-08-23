@@ -26,10 +26,17 @@ video {
 
 .stripe-form {
   /* width: calc(100vw - 40px); */
-  /* margin-top: 20px; */
-  margin-left: 20px;
-  margin-right: 20px;
-  margin-bottom: 20px;
+  /* padding-top: 20px; */
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 20px;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  z-index: 3;
+  background-color: #c55959;
+  width: calc(100vw - 40px);
+  height: 100vh;
 }
 
 .stripe-form .amount {
@@ -44,11 +51,16 @@ video {
   width: 100%;
 }
 
+input[name="amount"] {
+  width: 60px;
+}
+
 .tip {
   position: fixed;
   top: 20px;
   right: 20px;
   background-color: #c55959;
+  z-index: 2;
   /* padding: 20px; */
 }
 
@@ -58,7 +70,7 @@ video {
   position: fixed;
   bottom: 1px;
   background-color: #555;
-  z-index: 1000;
+  z-index: 1;
 }
 
 .page {

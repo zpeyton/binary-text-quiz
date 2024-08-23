@@ -149,6 +149,15 @@ export const addFundsAPI = async (amount) => {
   return res;
 };
 
+export const getPaySessionAPI = async () => {
+  let config = {
+    url: "/pay-session",
+  };
+
+  let res = await new API().call(config);
+  return res;
+};
+
 export const getPaymentMethodsAPI = async () => {
   let config = {
     url: "/payment-methods",
