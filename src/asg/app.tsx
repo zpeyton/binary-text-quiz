@@ -22,6 +22,7 @@ import {
   tokenAPI,
   STRIPE_PUBLISHABLE_KEY,
   getPaySessionAPI,
+  createPaymentAPI,
 } from "../asg-shared/api";
 import { Elements as StripeElements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
@@ -399,49 +400,79 @@ export const App = () => {
     const [errorMessage, setErrorMessage] = useState();
 
     const handleError = (error) => {
-      console.log("handleError");
+      console.log("handleError", error);
+      setErrorMessage(error);
     };
 
     const stripeSubmit = async (event) => {
       event.preventDefault();
       console.log("stripeSubmit");
-      if (!elements) {
-        console.log("missing elements hook");
+
+      if (!elements || !stripe) {
+        console.log("missing stripe hooks");
         return;
       }
+
       const { error: submitError } = await elements.submit();
+
       if (submitError) {
         handleError(submitError);
         return;
       }
+
+      console.log("form is valid", props.amount);
+
+      const { error, confirmationToken } = await stripe.createConfirmationToken(
+        { elements }
+      );
+
+      if (error) {
+        handleError(error);
+        setErrorMessage(error.toString() as any);
+        return;
+      }
+
+      console.log("got token", confirmationToken);
+
+      // send token to server to create payment intent
+
+      let postBody = {
+        confirmationToken: confirmationToken.id,
+        customer: props.session.customerId,
+        amount: props.amount * 100,
+      };
+
+      let res = await createPaymentAPI(postBody);
+      if (res.status == "fail") {
+        console.log(res.message);
+        setErrorMessage(res.message);
+      }
+
+      console.log("[StripePaymentForm] payment intent", res.data.intent);
+      // success
+      if (res.data.intent.status == "succeeded") {
+        props.resetAddFunds();
+      }
     };
+
     return (
       <form className="stripe-form" onSubmit={stripeSubmit}>
-        <h2>Hello {props.user.email}!</h2>
-        <div className="amount">
-          Let's add ${props.amount || 20} to your account.
-        </div>
+        <h2>Aloha {props.user.email}!</h2>
+        <p className="amount">Let's add ${props.amount} to your account.</p>
         <PaymentElement />
-        <button className="stripe-form-submit">Submit</button>
+        <button className="stripe-form-submit">Pay</button>
         {errorMessage && <div>{errorMessage}</div>}
       </form>
     );
   };
 
   const PaymentUI = (props) => {
-    let [methods, setMethods] = useState<any>([]);
-    let [sessionSecret, setSessionSecret] = useState<any>("");
+    let [stripeSession, setStripeSession] = useState<any>();
+    let [stripeOptions, setStripeOptions] = useState<any>();
 
     let getPaymentSession = async () => {
       let res = await getPaySessionAPI();
-      setSessionSecret(res.data.customerSession.client_secret);
-    };
-
-    // get existing methods
-
-    let getPaymentMethods = async () => {
-      let res = await getPaymentMethodsAPI();
-      setMethods(res.data.methods);
+      setStripeSession(res.data);
     };
 
     useEffect(() => {
@@ -453,43 +484,41 @@ export const App = () => {
     }, []);
 
     useEffect(() => {
-      if (sessionSecret) {
-        console.log(sessionSecret);
+      if (stripeSession) {
+        console.log(stripeSession);
+        const options = {
+          mode: "payment",
+          amount: props.amount * 100 || 2000,
+          currency: "usd",
+          paymentMethodCreation: "manual",
+          customerSessionClientSecret:
+            stripeSession.customerSession.client_secret,
+          // Fully customizable with appearance API.
+          appearance: {
+            theme: "night",
+            rules: {
+              ".Error": {
+                color: "#fff",
+              },
+            },
+          },
+        };
+        setStripeOptions(options);
       }
-    }, [sessionSecret]);
-
-    const options = {
-      mode: "payment",
-      amount: props.amount * 100 || 2000,
-      currency: "usd",
-      paymentMethodCreation: "manual",
-      customerSessionClientSecret: sessionSecret,
-      // Fully customizable with appearance API.
-      appearance: {
-        theme: "night",
-      },
-    };
+    }, [stripeSession]);
 
     return (
       <>
-        {sessionSecret ? (
-          <StripeElements stripe={stripePromise} options={options as any}>
-            <StripePaymentForm amount={props.amount} user={props.user} />
+        {stripeOptions ? (
+          <StripeElements stripe={stripePromise} options={stripeOptions}>
+            <StripePaymentForm
+              amount={props.amount || 20}
+              user={props.user}
+              session={stripeSession}
+              resetAddFunds={props.resetAddFunds}
+            />
           </StripeElements>
         ) : null}
-
-        {false &&
-          methods.map((item, index) => {
-            return (
-              <div key={index}>
-                {item.type == "card" ? (
-                  <>
-                    {item.brand} x{item.last4}
-                  </>
-                ) : null}
-              </div>
-            );
-          })}
       </>
     );
   };
@@ -498,16 +527,35 @@ export const App = () => {
     let inputAmountRef = useRef<HTMLInputElement>();
     let btnAddMoney = useRef<HTMLButtonElement>();
     let [errors, setErrors] = useState<any>([]);
-    let [updateCreditCard, setUpdateCreditCard] = useState<any>(true);
+    let [updateCreditCard, setUpdateCreditCard] = useState<any>(false);
 
     const resetAddFunds = () => {
       setErrors([]);
       setUpdateCreditCard(false);
+      props.resetTips();
     };
 
+    const amountKeyDown = async (event) => {
+      let amount = event.currentTarget.value.replace(/\D/g, "");
+      event.currentTarget.value = amount;
+
+      if (event.keyCode == 13) {
+        addMoney();
+      }
+    };
+
+    useEffect(() => {
+      if (btnAddMoney.current) {
+        btnAddMoney.current.click();
+      }
+    }, []);
+
     const addMoney = async () => {
-      console.log("Add Money");
-      let amount = inputAmountRef.current?.value;
+      console.log("Add Money", inputAmountRef.current?.value);
+      let amount = parseInt(
+        inputAmountRef.current?.value.replace(/\D/g, "") || ""
+      );
+      console.log("Add Money", amount);
       if (!amount) {
         return;
       }
@@ -550,6 +598,7 @@ export const App = () => {
               name="amount"
               placeholder="$20"
               defaultValue="20"
+              onKeyDown={amountKeyDown}
               ref={inputAmountRef as LegacyRef<HTMLInputElement> | undefined}
             />{" "}
             <button
@@ -568,12 +617,24 @@ export const App = () => {
     let btnSendTip = useRef<HTMLButtonElement>();
     let inputAmountRef = useRef<HTMLInputElement>();
     let [errors, setErrors] = useState<any>([]);
-    let [noMoney, setNoMoney] = useState<any>(true);
+    let [noMoney, setNoMoney] = useState<any>(false);
 
     const resetTips = () => {
       setErrors([]);
       setNoMoney(false);
     };
+
+    const amountKeyDown = async (event) => {
+      if (event.keyCode == 13) {
+        sendTip();
+      }
+    };
+
+    useEffect(() => {
+      if (btnSendTip.current) {
+        //btnSendTip.current.click();
+      }
+    }, []);
 
     const sendTip = async () => {
       console.log("Send Tip");
