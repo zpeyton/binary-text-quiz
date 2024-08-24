@@ -22,6 +22,10 @@ video {
   /* height: 100vh; */
   margin: 0px;
   padding: 0px;
+  /* transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
+  -moz-transform: rotateY(180deg);  */
+  transform: scale(-1, 1);
 }
 
 .stripe-form {
@@ -138,6 +142,10 @@ h2.payment {
   /* padding-left: 4px; */
   /* background-color: #f00; */
 }
+.chat-ui .toggle {
+  margin-left: 10px;
+  margin-bottom: 10px;
+}
 
 .chat input {
   /* max-width: 300px; */
@@ -180,48 +188,6 @@ h2.payment {
   /* margin-right: 8px; */
 }
 
-.quiz-grid {
-  display: grid;
-  grid-template-columns: 5fr 1fr 5fr;
-  vertical-align: middle;
-  align-items: center;
-  gap: 0px;
-}
-
-.quiz-col {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  font-size: 20px;
-}
-
-.gradient {
-  background: linear-gradient(
-    90deg,
-    rgb(53, 109, 151) 35%,
-    rgb(32, 54, 72) 100%
-  );
-  border-radius: 20px;
-  min-height: 200px;
-}
-
-.equals {
-  font-weight: bold;
-  font-size: 30px;
-  margin-top: -8px;
-}
-
-.input-char {
-  font-size: 30px;
-  width: 60px;
-  padding: 6px 6px;
-  padding-bottom: 10px;
-  line-height: 40px;
-  text-align: center;
-  border-radius: 12px;
-}
-
 .flex-center {
   width: 100%;
   text-align: center;
@@ -234,40 +200,12 @@ h2.payment {
   font-size: 30px;
 }
 
-.new-letter {
-  display: block;
-  margin-top: 20px;
-  font-size: 20px;
-  font-size: 30px;
-  /* background-color: aquamarine; */
-  /* border: 1px solid #ccc;
-   */
-  border-radius: 12px;
-}
-
-.green {
-  color: rgb(72, 178, 72);
-}
-
-.red {
-  color: rgb(236, 104, 104);
-}
-
-.binary {
-  color: white;
-  font-weight: bold;
-  font-family: "Courier New", Courier, monospace;
-  letter-spacing: 4px;
-  font-size: 40px;
-}
-
-i.fa {
-  display: block;
-  font-size: 60px;
-}
-
-footer {
-  margin: 40px 0px;
+.hidden {
+  height: 0px !important;
+  overflow: hidden;
+  position: relative;
+  padding: 0px;
+  margin: 0;
 }
 
 @media only screen and (max-width: 450px) {

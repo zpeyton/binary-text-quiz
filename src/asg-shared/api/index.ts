@@ -1,17 +1,16 @@
 import { random } from "lodash";
 
-let ENV = process.env.NODE_ENV;
-let APIRoot =
-  ENV == "development"
-    ? "https://localhost:8787"
-    : "https://asg-test.zapteck.workers.dev";
+let PROD = process.env.NODE_ENV == "production";
+let APIRoot = PROD
+  ? "https://asg-test.zapteck.workers.dev"
+  : "https://localhost:8787";
 
 console.log("APIRoot", APIRoot);
 
 let dev = process.env.STRIPE_PUBLISHABLE_KEY_DEV;
 let prod = process.env.STRIPE_PUBLISHABLE_KEY_PROD;
 
-export const STRIPE_PUBLISHABLE_KEY = ENV == "development" ? dev : prod;
+export const STRIPE_PUBLISHABLE_KEY = PROD ? prod : dev;
 
 export class API {
   async call(config) {
@@ -117,7 +116,7 @@ export const getPublishUrlAPI = async () => {
 };
 
 export const getChatsAPI = async (lastId) => {
-  let query = "?date=" + lastId;
+  let query = "?offsetid=" + lastId;
   let config = { url: "/messages" + query };
   let res = await new API().call(config);
   return res;

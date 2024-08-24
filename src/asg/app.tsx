@@ -34,6 +34,9 @@ import {
 
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY || "");
 
+const VIDEO_ENABLED = false;
+const CHAT_TIMER_ENABLED = false;
+
 export const App = () => {
   let [video, setVideo] = useState(false);
   let [user, setUser] = useState<any>({});
@@ -59,11 +62,11 @@ export const App = () => {
 
   let authUser = async (creds?) => {
     // console.log("authUser");
-    let token = localStorage.getItem("authToken");
+    let auth_token = localStorage.getItem("authToken");
     let user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (token) {
+    if (auth_token) {
       // is token valid
-      let validateToken = await tokenAPI({ token });
+      let validateToken = await tokenAPI({ auth_token });
       if (validateToken.status == "fail") {
         // console.log("authUser token check failed");
         setLoginNotice("Login Required - Token Expired");
@@ -151,6 +154,10 @@ export const App = () => {
   let setupWHEPClient = async (url?) => {
     if (!url) {
       url = await getWatchUrlAPI();
+    }
+    if (!VIDEO_ENABLED) {
+      console.log("VIDEO DISABLED");
+      return;
     }
 
     if ((window as any).streamClient) {
@@ -450,6 +457,10 @@ export const App = () => {
       }
 
       console.log("[StripePaymentForm] payment intent", res.data.intent);
+      console.log(
+        "[StripePaymentForm] payment new balance",
+        res.data.newBalance
+      );
       // success
       if (res.data.intent.status == "succeeded") {
         alert(
@@ -730,6 +741,7 @@ export const App = () => {
 
   const Chat = forwardRef((props: any, ref) => {
     let [chats, setChats] = useState<any>([]);
+    let [display, setDisplay] = useState<any>("");
     let inputChat = useRef<HTMLInputElement>();
     let btnSendChat = useRef<HTMLButtonElement>();
     let chatLog = useRef<HTMLDivElement>();
@@ -738,6 +750,9 @@ export const App = () => {
       get() {
         console.log("refget");
         get();
+      },
+      toggle() {
+        toggle();
       },
     }));
 
@@ -753,6 +768,18 @@ export const App = () => {
       chatLog.current?.scrollTo(0, chatLog.current.scrollHeight);
       inputChat.current?.focus();
     }, [chats]);
+
+    const toggle = () => {
+      setDisplay(display ? null : "hidden");
+    };
+
+    const toggleVolume = (event) => {
+      let text = props.videoRef.current.muted ? "Mute" : "UnMute";
+      event.currentTarget.innerText = text;
+      props.videoRef.current.muted = props.videoRef.current.muted
+        ? false
+        : true;
+    };
 
     const chatKeyDown = async (event) => {
       if (event.keyCode == 13) {
@@ -778,6 +805,7 @@ export const App = () => {
       if (!props.user.type) {
         return;
       }
+
       if (chatLog.current?.innerHTML && !chats.length) {
         console.log(
           "Somehow we have loaded chats but the state is not current in this call??"
@@ -799,10 +827,10 @@ export const App = () => {
         return;
       }
 
-      let newChats = getNewChats.data.messages;
+      let { messages } = getNewChats.data;
 
-      if (newChats.length) {
-        let concat = chats.concat(newChats);
+      if (messages.length) {
+        let concat = chats.concat(messages);
         setChats(concat);
         return;
       }
@@ -810,10 +838,16 @@ export const App = () => {
 
     return (
       <>
-        <div className="chat-ui">
+        <div className={"chat-ui"}>
           <Timer callback={get} />
+          <button className="toggle" onClick={toggle}>
+            X
+          </button>
+          <button className="toggle" onClick={toggleVolume}>
+            Mute
+          </button>
           <div
-            className="chat-log"
+            className={"chat-log " + display}
             ref={chatLog as LegacyRef<HTMLDivElement> | undefined}
           >
             {chats &&
@@ -827,7 +861,7 @@ export const App = () => {
                 );
               })}
           </div>
-          <div className="chat">
+          <div className={"chat " + display}>
             <div>
               <input
                 name="message"
@@ -859,7 +893,12 @@ export const App = () => {
       setChecks(checks + 1);
       if (checks) {
         // console.log("[Timer] callback");
-        //props.callback();
+        if (!CHAT_TIMER_ENABLED) {
+          console.log("CHAT TIMER DISABLED");
+          return;
+        }
+
+        props.callback();
       }
     };
 
@@ -909,12 +948,16 @@ export const App = () => {
             ref={videoEl as LegacyRef<HTMLVideoElement> | undefined}
             id="watch"
             autoPlay={true}
-            playsInline={true}
             controls={true}
             style={video ? {} : { height: "1px" }}
             muted={user.type == "stream" ? true : false}
           ></video>
-          <Chat ref={chatRef} authUser={authUser} user={user} />
+          <Chat
+            ref={chatRef}
+            videoRef={videoEl}
+            authUser={authUser}
+            user={user}
+          />
         </>
       ) : null}
     </div>
