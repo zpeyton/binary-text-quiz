@@ -40,6 +40,13 @@ export class API {
       res = await fetch(config.url, fetchConfig);
       resJson = await res.json();
       console.log("[API]", resJson);
+      if (resJson.message == "Server Error") {
+        resJson.status = "500";
+        alert(
+          "Whoops. There was a problem with this request. We are working on it."
+        );
+      }
+
       return resJson;
     } catch (e) {
       console.log("[API]", e);

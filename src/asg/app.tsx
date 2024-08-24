@@ -76,7 +76,8 @@ export const App = () => {
       if (loginNotice) {
         setLoginNotice("");
       }
-      setUser(user);
+      localStorage.setItem("user", JSON.stringify(validateToken.data.user));
+      setUser(validateToken.data.user);
 
       return;
     }
@@ -148,7 +149,6 @@ export const App = () => {
   };
 
   let setupWHEPClient = async (url?) => {
-    return;
     if (!url) {
       url = await getWatchUrlAPI();
     }
@@ -446,18 +446,22 @@ export const App = () => {
       if (res.status == "fail") {
         console.log(res.message);
         setErrorMessage(res.message);
+        return;
       }
 
       console.log("[StripePaymentForm] payment intent", res.data.intent);
       // success
       if (res.data.intent.status == "succeeded") {
-        props.resetAddFunds();
+        alert(
+          "Thank you for your order. Your account balance has been updated."
+        );
+        props.resetAddFunds(res.data.newBalance);
       }
     };
 
     return (
       <form className="stripe-form" onSubmit={stripeSubmit}>
-        <h2>Aloha {props.user.email}!</h2>
+        <h2 className="payment">Aloha {props.user.email}!</h2>
         <p className="amount">Let's add ${props.amount} to your account.</p>
         <PaymentElement />
         <button className="stripe-form-submit">Pay</button>
@@ -529,10 +533,10 @@ export const App = () => {
     let [errors, setErrors] = useState<any>([]);
     let [updateCreditCard, setUpdateCreditCard] = useState<any>(false);
 
-    const resetAddFunds = () => {
+    const resetAddFunds = (balance) => {
       setErrors([]);
       setUpdateCreditCard(false);
-      props.resetTips();
+      props.resetTips(balance);
     };
 
     const amountKeyDown = async (event) => {
@@ -546,7 +550,7 @@ export const App = () => {
 
     useEffect(() => {
       if (btnAddMoney.current) {
-        btnAddMoney.current.click();
+        //btnAddMoney.current.click();
       }
     }, []);
 
@@ -567,6 +571,7 @@ export const App = () => {
 
         if (res.message == "Credit card failed") {
           setUpdateCreditCard(true);
+          return;
         }
         setErrors([res]);
         return;
@@ -574,7 +579,9 @@ export const App = () => {
 
       console.log("Add funds success");
       setErrors([]);
-      props.resetTips();
+      // TODO: if they have a payment method
+      // we can reset the amount here props.resetTips();
+
       // update tips UI
       //props.chatRef.current.get();
     };
@@ -617,11 +624,13 @@ export const App = () => {
     let btnSendTip = useRef<HTMLButtonElement>();
     let inputAmountRef = useRef<HTMLInputElement>();
     let [errors, setErrors] = useState<any>([]);
-    let [noMoney, setNoMoney] = useState<any>(false);
+    let [noMoney, setNoMoney] = useState<any>();
+    let [balance, setBalance] = useState<any>(props.user.balance);
 
-    const resetTips = () => {
+    const resetTips = (balance) => {
       setErrors([]);
       setNoMoney(false);
+      setBalance(balance);
     };
 
     const amountKeyDown = async (event) => {
@@ -634,18 +643,46 @@ export const App = () => {
       if (btnSendTip.current) {
         //btnSendTip.current.click();
       }
+      if (!balance) {
+        // setNoMoney(true);
+        // setErrors([{}]);
+      }
     }, []);
 
     const sendTip = async () => {
-      console.log("Send Tip");
-      // has money?
-      let res = await sendTipAPI({ amount: 2 });
+      console.log("Send Tip!");
+
+      if (!inputAmountRef.current) {
+        console.log("No inputAmountRef");
+
+        return;
+      }
+
+      let amount = parseInt(inputAmountRef.current?.value);
+
+      if (!amount) {
+        console.log("Invalid amount");
+        return;
+      }
+
+      inputAmountRef.current.value = amount.toString();
+
+      let res = await sendTipAPI({ amount });
+
       if (res.status == "fail") {
         console.log("Send Tip failed");
         if (res.message == "No money") {
           setNoMoney(true);
         }
+
         setErrors([res]);
+        return;
+      }
+
+      if (res.status == "OK") {
+        // reload chat
+        setBalance(res.data.newBalance);
+        props.chatRef.current.get();
         return;
       }
     };
@@ -658,12 +695,34 @@ export const App = () => {
           })}
         {noMoney ? <AddFundsUI resetTips={resetTips} user={user} /> : null}
         {errors.length ? null : (
-          <button
-            ref={btnSendTip as LegacyRef<HTMLButtonElement> | undefined}
-            onClick={sendTip}
-          >
-            $ Tip
-          </button>
+          <>
+            <div className="tip-ui">
+              <button
+                ref={btnSendTip as LegacyRef<HTMLButtonElement> | undefined}
+                onClick={sendTip}
+              >
+                Tip
+              </button>{" "}
+              <input
+                name="tip-amount"
+                placeholder={"$1"}
+                defaultValue="1"
+                onKeyDown={amountKeyDown}
+                ref={inputAmountRef as LegacyRef<HTMLInputElement> | undefined}
+              />
+            </div>
+            / ${balance || 0}{" "}
+            {!balance ? (
+              <button
+                onClick={() => {
+                  setErrors([{}]);
+                  setNoMoney(true);
+                }}
+              >
+                $ Add Money
+              </button>
+            ) : null}
+          </>
         )}
       </div>
     );
@@ -684,6 +743,7 @@ export const App = () => {
 
     useEffect(() => {
       if (!props.user.type) {
+        console.log("Chats loaded but no user");
         return; // user not set yet
       }
       get();
@@ -715,7 +775,7 @@ export const App = () => {
     };
 
     const get = async () => {
-      if (!props.user) {
+      if (!props.user.type) {
         return;
       }
       if (chatLog.current?.innerHTML && !chats.length) {
@@ -820,17 +880,26 @@ export const App = () => {
     <div className="page">
       {user.type == "stream" ? null : (
         <>
+          {loginNotice ? null : (
+            <>
+              <TipUI chatRef={chatRef} user={user} />
+            </>
+          )}
           {video ? null : (
-            <div className="waiting">
+            <>
               {loginNotice ? (
                 <>
-                  <LoginUI notice={loginNotice} authUser={authUser} />
-                  <SignupUI notice={signupNotice} authUser={authUser} />
+                  <div className="waiting">
+                    <LoginUI notice={loginNotice} authUser={authUser} />
+                    <SignupUI notice={signupNotice} authUser={authUser} />
+                  </div>
                 </>
               ) : (
-                <div>Waiting for live feed...</div>
+                <div className="loading-video">
+                  <h2 className="payment">Loading video...</h2>
+                </div>
               )}
-            </div>
+            </>
           )}
         </>
       )}
@@ -848,12 +917,6 @@ export const App = () => {
           <Chat ref={chatRef} authUser={authUser} user={user} />
         </>
       ) : null}
-      {loginNotice ? null : (
-        <>
-          <TipUI chatRef={chatRef} user={user} />
-          {/* <PaymentUI user={user} /> */}
-        </>
-      )}
     </div>
   );
 };
