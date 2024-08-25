@@ -1,40 +1,7 @@
-import React, {
-  forwardRef,
-  LegacyRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
-import WHEPClient from "../public/WHEPClient";
-import WHIPClient from "../public/WHIPClient";
-import {
-  addFundsAPI,
-  disconnectAPI,
-  getChatsAPI,
-  getPaymentMethodsAPI,
-  getPublishUrlAPI,
-  getWatchUrlAPI,
-  loginAPI,
-  sendChatAPI,
-  sendTipAPI,
-  signupAPI,
-  tokenAPI,
-  STRIPE_PUBLISHABLE_KEY,
-  getPaySessionAPI,
-  createPaymentAPI,
-} from "../asg-shared/api";
-import { Elements as StripeElements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
-import {
-  PaymentElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
+import React, { useEffect, useRef, useState } from "react";
+import { loginAPI, tokenAPI } from "../asg-shared/api";
 import { WHEP, WHIP } from "../asg-shared/webrtc";
 import { Timer } from "../asg-shared/timer";
-import { random } from "lodash";
-import * as Icons from "../asg-shared/icons";
 import { Video } from "../asg-shared/video";
 import { Chat } from "../asg-shared/chat";
 import { LoginUI, SignupUI } from "../asg-shared/auth";
@@ -51,19 +18,12 @@ export const App = () => {
   let chatRef = useRef<any>();
 
   let cleanupStreamClient = async () => {
-    await (window as any).streamClient?.peerConnection?.close();
-    if ((window as any).streamClient?.disconnectStream) {
-      await (window as any).streamClient?.disconnectStream();
+    whip.client?.peerConnection?.close();
+
+    if (whip.client?.disconnectStream) {
+      await whip.client?.disconnectStream();
     }
-
-    (window as any).streamClient = null;
   };
-
-  // window.onbeforeunload = async () => {
-  //   console.log("onbeforeunload");
-  //   await cleanupStreamClient();
-  //   await disconnectAPI();
-  // };
 
   let authUser = async (creds?) => {
     // console.log("authUser");

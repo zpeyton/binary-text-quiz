@@ -11,6 +11,7 @@ import {
   sendTipAPI,
   STRIPE_PUBLISHABLE_KEY,
 } from "./api";
+import * as Icons from "../asg-shared/icons";
 
 import { Elements as StripeElements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
@@ -245,7 +246,7 @@ export const AddFundsUI = (props) => {
             ref={btnAddMoney as LegacyRef<HTMLAnchorElement> | undefined}
             onClick={addMoney}
           >
-            $
+            <Icons.dollarSign />
           </a>
         </>
       )}
@@ -342,7 +343,7 @@ export const TipUI = (props) => {
             ref={btnSendTip as LegacyRef<HTMLAnchorElement> | undefined}
             onClick={sendTip}
           >
-            $
+            <Icons.dollarSign />
           </a>
           <input
             name="tip-amount"
