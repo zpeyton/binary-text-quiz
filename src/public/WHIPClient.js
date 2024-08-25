@@ -9,6 +9,7 @@ export default class WHIPClient {
   constructor(endpoint, videoElement) {
     this.endpoint = endpoint;
     this.videoElement = videoElement;
+    this.device;
     /**
      * Create a new WebRTC connection, using public STUN servers with ICE,
      * allowing the client to disover its own IP address.
@@ -47,22 +48,117 @@ export default class WHIPClient {
       })
       .catch(console.error);
   }
+
   /**
    * Ask for camera and microphone permissions and
    * add video and audio tracks to the peerConnection.
    *
    * https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
    */
+
+  async getBackCamera() {
+    // get back camera deviceId
+    let devices = await navigator.mediaDevices.enumerateDevices();
+    //
+
+    let backCameraDevice = devices.find((device) => {
+      return device.label == "Back Camera";
+    });
+
+    return backCameraDevice;
+  }
+
+  async getVideoTranciever() {
+    let videoTranciever = this.peerConnection.getTransceivers().find((item) => {
+      return item.sender.track.kind == "video";
+    });
+
+    return videoTranciever;
+  }
+
+  async switchCamera() {
+    let currentDevice = this.device;
+    console.log("[switchCamera] current device", currentDevice);
+
+    let backCamera = await this.getBackCamera();
+
+    let constraints = { video: { height: 720, width: 1280 }, audio: true };
+
+    if (currentDevice == "Front Camera") {
+      constraints.video = {
+        deviceId: backCamera.deviceId,
+        height: 720,
+        width: 1280,
+      };
+
+      //constraints.video = { facingMode: "environment" };
+      this.device = "Back Camera";
+    } else {
+      this.device = "Front Camera";
+      //constraints.video = { facingMode: "user" };
+    }
+
+    console.log("[switchCamera] constraints", constraints);
+
+    let stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+    console.log("new Stream", stream);
+
+    stream.getTracks().forEach(async (track) => {
+      console.log("getTracks track", track.label);
+      let videoTranciever = await this.getVideoTranciever();
+
+      if (track.label.indexOf("Camera") > -1) {
+        console.log("track label", track.label);
+        console.log("videoTranciever", videoTranciever);
+        // const transceiver = this.peerConnection.addTransceiver(track, {
+        //   /** WHIP is only for sending streaming media */
+        //   direction: "sendonly",
+        // });
+        console.log("Replace Track");
+
+        videoTranciever.sender.replaceTrack(track);
+
+        videoTranciever.sender.track.applyConstraints({
+          width: 1280,
+          height: 720,
+        });
+
+        //this.peerConnection.removeTrack(videoTranciever.sender);
+        //this.peerConnection.addTrack(track);
+
+        // videoTranciever.sender.track.applyConstraints({
+        //   deviceId: backCamera.deviceId,
+        // });
+      }
+    });
+
+    this.localStream = stream;
+
+    console.log("[WHIPClient] Video Element", this.videoElement);
+    this.videoElement.srcObject = stream;
+  }
+
+  /**
+   * Ask for camera and microphone permissions and
+   * add video and audio tracks to the peerConnection.
+   *
+   * https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
+   */
+
   async accessLocalMediaSources() {
     return navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
         stream.getTracks().forEach((track) => {
+          console.log(track.label);
           const transceiver = this.peerConnection.addTransceiver(track, {
             /** WHIP is only for sending streaming media */
             direction: "sendonly",
           });
+
           if (track.kind == "video" && transceiver.sender.track) {
+            this.device = track.label;
             transceiver.sender.track.applyConstraints({
               width: 1280,
               height: 720,

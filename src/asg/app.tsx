@@ -34,14 +34,17 @@ import {
 
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY || "");
 
-const VIDEO_ENABLED = false;
+const VIDEO_ENABLED = true;
 const CHAT_TIMER_ENABLED = false;
 
 export const App = () => {
-  let [video, setVideo] = useState(false);
   let [user, setUser] = useState<any>({});
+  let [video, setVideo] = useState(false);
+  let [chats, setChats] = useState<any>([]);
   let [loginNotice, setLoginNotice] = useState<any>("");
   let [signupNotice, setSignupNotice] = useState<any>("");
+  let [initialVideoLoad, setInitialVideoLoad] = useState<any>("");
+  let [initialChatsLoad, setInitialChatsLoad] = useState<any>("");
   let videoEl = useRef<HTMLVideoElement>();
   let chatRef = useRef();
 
@@ -71,7 +74,6 @@ export const App = () => {
         // console.log("authUser token check failed");
         setLoginNotice("Login Required - Token Expired");
         setUser({});
-        setVideo(false);
         await cleanupStreamClient();
         localStorage.setItem("authToken", "");
         return;
@@ -80,6 +82,7 @@ export const App = () => {
         setLoginNotice("");
       }
       localStorage.setItem("user", JSON.stringify(validateToken.data.user));
+      console.log("[authToken] Valid setUser");
       setUser(validateToken.data.user);
 
       return;
@@ -114,110 +117,23 @@ export const App = () => {
     return true;
   };
 
-  let setupWHIPClient = async () => {
-    console.log("setupWHIPClient");
-    let url = await getPublishUrlAPI();
-    if ((window as any).streamClient) {
-      console.log("setupWHIPClient a stream client already exists");
-      return;
-    }
-    let streamClient = new WHIPClient(url, videoEl.current);
-    (window as any).streamClient = streamClient;
-    streamClient.peerConnection.addEventListener(
-      "connectionstatechange",
-      async () => {
-        console.log(
-          "connectionstatechange",
-          streamClient.peerConnection.connectionState
-        );
-        if (streamClient.peerConnection.connectionState == "disconnected") {
-          setVideo(false);
-          await cleanupStreamClient();
-          setupWHIPClient();
-        }
-        if (streamClient.peerConnection.connectionState == "connected") {
-          if (videoEl.current) {
-            setVideo(true);
-            setTimeout(() => {
-              if (videoEl.current) {
-                videoEl.current.srcObject = streamClient.localStream;
-                videoEl.current.play();
-              }
-            }, 100);
-          }
-        }
-      }
-    );
-    return;
-  };
-
-  let setupWHEPClient = async (url?) => {
-    if (!url) {
-      url = await getWatchUrlAPI();
-    }
-    if (!VIDEO_ENABLED) {
-      console.log("VIDEO DISABLED");
-      return;
-    }
-
-    if ((window as any).streamClient) {
-      console.log("setupWHEPClient a stream client already exists");
-      return;
-    }
-
-    let streamClient = new WHEPClient(url, videoEl.current);
-    (window as any).streamClient = streamClient;
-    streamClient.peerConnection.addEventListener(
-      "connectionstatechange",
-      async () => {
-        console.log(
-          "connectionstatechange",
-          streamClient.peerConnection.connectionState
-        );
-
-        if (
-          streamClient.peerConnection.connectionState == "disconnected" ||
-          streamClient.peerConnection.connectionState == "failed"
-        ) {
-          setVideo(false);
-          if (videoEl.current) {
-            await cleanupStreamClient();
-            videoEl.current.srcObject = null;
-          }
-          await setupWHEPClient(url);
-        }
-        if (streamClient.peerConnection.connectionState == "connected") {
-          if (videoEl.current) {
-            setVideo(true);
-            setTimeout(() => {
-              if (videoEl.current) {
-                videoEl.current.srcObject = streamClient.stream;
-                videoEl.current.play();
-              }
-            }, 100);
-          }
-        }
-      }
-    );
-  };
-
   useEffect(() => {
-    // console.log("UseEffect APP");
+    console.log("[UseEffect] APP");
+    localStorage.removeItem("chats");
     authUser();
   }, []);
 
   useEffect(() => {
-    // console.log("User changed");
+    console.log("[UseEffect] User changed", user);
     if (!user.type) {
       return;
     }
-
-    if (user.type == "stream") {
-      setupWHIPClient();
-    } else {
-      setupWHEPClient();
-    }
+    // once we have the user get messages
   }, [user]);
+
+  useEffect(() => {
+    console.log("[UseEffect] initialVideoLoad", initialVideoLoad);
+  }, [initialVideoLoad]);
 
   const SignupUI = (props) => {
     let usernameRef = useRef<HTMLInputElement>();
@@ -411,6 +327,11 @@ export const App = () => {
       setErrorMessage(error);
     };
 
+    const goback = (event) => {
+      event.preventDefault();
+      props.resetAddFunds();
+    };
+
     const stripeSubmit = async (event) => {
       event.preventDefault();
       console.log("stripeSubmit");
@@ -475,7 +396,10 @@ export const App = () => {
         <h2 className="payment">Aloha {props.user.email}!</h2>
         <p className="amount">Let's add ${props.amount} to your account.</p>
         <PaymentElement />
-        <button className="stripe-form-submit">Pay</button>
+        <button className="stripe-form-submit">Pay</button>{" "}
+        <button className="" onClick={goback}>
+          Back
+        </button>
         {errorMessage && <div>{errorMessage}</div>}
       </form>
     );
@@ -540,14 +464,16 @@ export const App = () => {
 
   const AddFundsUI = (props) => {
     let inputAmountRef = useRef<HTMLInputElement>();
-    let btnAddMoney = useRef<HTMLButtonElement>();
+    let btnAddMoney = useRef<HTMLAnchorElement>();
     let [errors, setErrors] = useState<any>([]);
     let [updateCreditCard, setUpdateCreditCard] = useState<any>(false);
 
     const resetAddFunds = (balance) => {
       setErrors([]);
       setUpdateCreditCard(false);
-      props.resetTips(balance);
+      if (balance) {
+        props.resetTips(balance);
+      }
     };
 
     const amountKeyDown = async (event) => {
@@ -614,17 +540,18 @@ export const App = () => {
           <>
             <input
               name="amount"
-              placeholder="$20"
-              defaultValue="20"
+              placeholder="Enter an amount, say $20"
+              // defaultValue="20"
               onKeyDown={amountKeyDown}
+              maxLength={3}
               ref={inputAmountRef as LegacyRef<HTMLInputElement> | undefined}
             />{" "}
-            <button
-              ref={btnAddMoney as LegacyRef<HTMLButtonElement> | undefined}
+            <a
+              ref={btnAddMoney as LegacyRef<HTMLAnchorElement> | undefined}
               onClick={addMoney}
             >
-              $ Add Money
-            </button>
+              $
+            </a>
           </>
         )}
       </>
@@ -632,7 +559,7 @@ export const App = () => {
   };
 
   const TipUI = (props) => {
-    let btnSendTip = useRef<HTMLButtonElement>();
+    let btnSendTip = useRef<HTMLAnchorElement>();
     let inputAmountRef = useRef<HTMLInputElement>();
     let [errors, setErrors] = useState<any>([]);
     let [noMoney, setNoMoney] = useState<any>();
@@ -644,7 +571,18 @@ export const App = () => {
       setBalance(balance);
     };
 
+    const amountChange = async (event) => {
+      // console.log("value in change event", event.currentTarget.value);
+      // let amount = event.currentTarget.value.replace(/\D/g, "");
+      // if (inputAmountRef.current) {
+      //   inputAmountRef.current.value = amount;
+      // }
+    };
+
     const amountKeyDown = async (event) => {
+      let amount = event.currentTarget.value.replace(/\D/g, "");
+      event.currentTarget.value = amount;
+
       if (event.keyCode == 13) {
         sendTip();
       }
@@ -662,10 +600,15 @@ export const App = () => {
 
     const sendTip = async () => {
       console.log("Send Tip!");
-
+      // props.chatRef.current.get();
+      if (!props.user.balance) {
+        setNoMoney(true);
+        setErrors([{}]);
+        props.chatRef.current.toggleTwoevencols();
+        return;
+      }
       if (!inputAmountRef.current) {
         console.log("No inputAmountRef");
-
         return;
       }
 
@@ -684,6 +627,7 @@ export const App = () => {
         console.log("Send Tip failed");
         if (res.message == "No money") {
           setNoMoney(true);
+          props.chatRef.current.toggleTwoevencols();
         }
 
         setErrors([res]);
@@ -699,7 +643,7 @@ export const App = () => {
     };
 
     return (
-      <div className="tip">
+      <div>
         {!noMoney &&
           errors.map((error, index) => {
             return <span key="index">! {error.message}</span>;
@@ -707,32 +651,33 @@ export const App = () => {
         {noMoney ? <AddFundsUI resetTips={resetTips} user={user} /> : null}
         {errors.length ? null : (
           <>
-            <div className="tip-ui">
-              <button
-                ref={btnSendTip as LegacyRef<HTMLButtonElement> | undefined}
-                onClick={sendTip}
-              >
-                Tip
-              </button>{" "}
-              <input
-                name="tip-amount"
-                placeholder={"$1"}
-                defaultValue="1"
-                onKeyDown={amountKeyDown}
-                ref={inputAmountRef as LegacyRef<HTMLInputElement> | undefined}
-              />
-            </div>
-            / ${balance || 0}{" "}
-            {!balance ? (
-              <button
+            <a
+              ref={btnSendTip as LegacyRef<HTMLAnchorElement> | undefined}
+              onClick={sendTip}
+            >
+              $
+            </a>
+            <input
+              name="tip-amount"
+              placeholder={"Tip $1 " + `/ $${balance || 0}`}
+              // defaultValue="1"
+              // type="number"
+              maxLength={3}
+              onKeyDown={amountKeyDown}
+              ref={inputAmountRef as LegacyRef<HTMLInputElement> | undefined}
+            />
+
+            {/* {!balance ? (
+              <a
+                className="hidden"
                 onClick={() => {
                   setErrors([{}]);
                   setNoMoney(true);
                 }}
               >
                 $ Add Money
-              </button>
-            ) : null}
+              </a>
+            ) : null} */}
           </>
         )}
       </div>
@@ -740,34 +685,57 @@ export const App = () => {
   };
 
   const Chat = forwardRef((props: any, ref) => {
-    let [chats, setChats] = useState<any>([]);
+    let chatsCache = localStorage.getItem("chats");
+    let initChats = [];
+    if (chatsCache) {
+      console.log("Use chats cache on rerender");
+      initChats = JSON.parse(chatsCache);
+    }
+
+    let [chats, setChats] = useState<any>(initChats);
     let [display, setDisplay] = useState<any>("");
+    let [twoevencols, setTwoevencols] = useState<any>(false);
     let inputChat = useRef<HTMLInputElement>();
-    let btnSendChat = useRef<HTMLButtonElement>();
+    let btnSendChat = useRef<HTMLAnchorElement>();
     let chatLog = useRef<HTMLDivElement>();
 
     useImperativeHandle(ref, () => ({
       get() {
-        console.log("refget");
         get();
       },
       toggle() {
         toggle();
       },
+      toggleTwoevencols() {
+        toggleTwoevencols();
+      },
     }));
 
     useEffect(() => {
+      console.log("[Chats.UseEffect]");
+
       if (!props.user.type) {
         console.log("Chats loaded but no user");
         return; // user not set yet
       }
+
+      if (props.initialChatsLoad) {
+        console.log("Already loaded chats");
+        return;
+      }
+
       get();
+      //
     }, []);
 
     useEffect(() => {
       chatLog.current?.scrollTo(0, chatLog.current.scrollHeight);
-      inputChat.current?.focus();
+      //inputChat.current?.focus();
     }, [chats]);
+
+    const toggleTwoevencols = () => {
+      setTwoevencols(twoevencols ? "" : "twoevencols");
+    };
 
     const toggle = () => {
       setDisplay(display ? null : "hidden");
@@ -781,13 +749,25 @@ export const App = () => {
         : true;
     };
 
+    const toggleCamera = (event) => {
+      console.log("Video Element", props.videoRef.current);
+
+      (window as any).streamClient.switchCamera(props.videoRef.current);
+      console.log("Video Element", props.videoRef.current);
+
+      //setVideo(true);
+      console.log("toggle Camera end");
+      console.log("Video Element", props.videoRef.current);
+    };
+
     const chatKeyDown = async (event) => {
       if (event.keyCode == 13) {
         sendChat();
       }
     };
 
-    const sendChat = async () => {
+    const sendChat = async (event?) => {
+      event?.preventDefault();
       if (!inputChat.current) {
         console.log("No input field");
         return;
@@ -802,8 +782,15 @@ export const App = () => {
     };
 
     const get = async () => {
+      console.log("chats get");
       if (!props.user.type) {
         return;
+      }
+
+      let chatsCache = localStorage.getItem("chats");
+
+      if (chatsCache) {
+        chats = JSON.parse(chatsCache);
       }
 
       if (chatLog.current?.innerHTML && !chats.length) {
@@ -831,7 +818,18 @@ export const App = () => {
 
       if (messages.length) {
         let concat = chats.concat(messages);
+        console.log("[Chats.get] Set Chats");
+
+        localStorage.setItem("chats", JSON.stringify(concat));
+
         setChats(concat);
+
+        // setTimeout(() => {
+        //   props.parentMethod(true);
+        // }, 1000);
+        if (!props.initialChatsLoad) {
+          props.setInitialChatsLoad(true);
+        }
         return;
       }
     };
@@ -839,13 +837,22 @@ export const App = () => {
     return (
       <>
         <div className={"chat-ui"}>
-          <Timer callback={get} />
-          <button className="toggle" onClick={toggle}>
-            X
-          </button>
-          <button className="toggle" onClick={toggleVolume}>
-            Mute
-          </button>
+          {/* {chats.length ? <Timer callback={get} /> : null} */}
+          <div className="controls">
+            {user.type != "stream" ? (
+              <button className="toggle" onClick={toggleVolume}>
+                Mute
+              </button>
+            ) : (
+              <button className="toggle" onClick={toggleCamera}>
+                Switch Camera
+              </button>
+            )}
+
+            <button className="toggle" onClick={toggle}>
+              X
+            </button>
+          </div>
           <div
             className={"chat-log " + display}
             ref={chatLog as LegacyRef<HTMLDivElement> | undefined}
@@ -861,24 +868,36 @@ export const App = () => {
                 );
               })}
           </div>
-          <div className={"chat " + display}>
+          <div className={"chat " + twoevencols + " " + display}>
             <div>
               <input
                 name="message"
-                placeholder={user.username}
+                placeholder={user.username + ", what's up?"}
                 ref={inputChat as LegacyRef<HTMLInputElement> | undefined}
                 onKeyDown={chatKeyDown}
               />
-            </div>
-
-            <div>
-              <button
-                ref={btnSendChat as LegacyRef<HTMLButtonElement> | undefined}
+              <a
+                href="#"
+                ref={btnSendChat as LegacyRef<HTMLAnchorElement> | undefined}
                 onClick={sendChat}
               >
-                Send
-              </button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 384 512"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M214.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 141.2 160 448c0 17.7 14.3 32 32 32s32-14.3 32-32l0-306.7L329.4 246.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </a>
             </div>
+
+            <TipUI chatRef={chatRef} user={user} />
           </div>
         </div>
       </>
@@ -890,73 +909,260 @@ export const App = () => {
     let [tick, setTick] = useState<any>();
     let delay = 4000;
     let call = () => {
-      setChecks(checks + 1);
       if (checks) {
         // console.log("[Timer] callback");
         if (!CHAT_TIMER_ENABLED) {
-          console.log("CHAT TIMER DISABLED");
           return;
         }
 
         props.callback();
       }
+      setChecks(checks + 1);
     };
 
     useEffect(() => {
       if (checks) {
-        setTimeout(call, delay);
+        (window as any).chatTimer = setTimeout(call, delay);
       }
     }, [checks]);
 
     useEffect(() => {
       setTick(call);
+      console.log("UseEffect Timer");
+      clearTimeout((window as any).chatTimer);
+      if (!CHAT_TIMER_ENABLED) {
+        console.log("CHAT TIMER DISABLED");
+        return;
+      }
     }, []);
 
     return <></>;
   };
 
+  const Video = (props) => {
+    let [someOtherVar, setSomeOtherVar] = useState(false);
+
+    useEffect(() => {
+      // console.log("[UseEffect] Video");
+      // console.log(
+      //   "[UseEffect] Video ",
+      //   "props.initialVideoLoad",
+      //   props.initialVideoLoad,
+      //   "video",
+      //   video
+      // );
+
+      if ((window as any).streamClient) {
+        (window as any).streamClient.videoElement = props.videoRef.current;
+      }
+
+      if (!props.user.type) {
+        console.log("[UseEffect] Video - No user", user);
+        return;
+      }
+
+      if (props.initialVideoLoad) {
+        console.log("Already loaded video");
+        return;
+      }
+
+      if (props.user.type == "stream") {
+        setupWHIPClient();
+      } else {
+        setupWHEPClient();
+      }
+
+      if (!props.initialVideoLoad) {
+        props.setInitialVideoLoad(true);
+      }
+    }, []);
+
+    useEffect(() => {
+      console.log("[UseEffect] Video changed", video);
+      if (props.video !== undefined) {
+        //props.parentMethod("blah");
+      }
+
+      if (video === undefined) {
+        setTimeout(() => {
+          // console.log("[UseEffect] TImeout", video);
+        }, 1000);
+      }
+    }, [video]);
+
+    useEffect(() => {
+      console.log("[UseEffect] someOtherVar changed", someOtherVar);
+    }, [someOtherVar]);
+
+    let setupWHIPClient = async () => {
+      if (!VIDEO_ENABLED) {
+        console.log("VIDEO DISABLED");
+        return;
+      }
+      console.log("[setupWHIPClient]");
+      let url = await getPublishUrlAPI();
+
+      if ((window as any).streamClient) {
+        console.log("[setupWHIPClient] a stream client already exists");
+        return;
+      }
+      let streamClient = new WHIPClient(url, props.videoRef.current);
+      (window as any).streamClient = streamClient;
+      streamClient.peerConnection.addEventListener(
+        "connectionstatechange",
+        async () => {
+          console.log(
+            "[peerConnection] connectionstatechange",
+            streamClient.peerConnection.connectionState
+          );
+
+          if (streamClient.peerConnection.connectionState == "disconnected") {
+            setVideo(false);
+            await cleanupStreamClient();
+            setupWHIPClient();
+          }
+          if (streamClient.peerConnection.connectionState == "connected") {
+            if (props.videoRef.current) {
+              setVideo(true);
+              setTimeout(() => {
+                if (props.videoRef.current) {
+                  props.videoRef.current.srcObject = streamClient.localStream;
+                  props.videoRef.current.play();
+                }
+              }, 100);
+            }
+          }
+        }
+      );
+      return;
+    };
+
+    let setupWHEPClient = async (url?) => {
+      console.log("setupWHEPClient");
+
+      if (!url) {
+        url = await getWatchUrlAPI();
+      }
+
+      setSomeOtherVar(true);
+
+      if (!VIDEO_ENABLED) {
+        console.log("VIDEO DISABLED");
+        return;
+      }
+
+      if ((window as any).streamClient) {
+        console.log("setupWHEPClient a stream client already exists");
+        return;
+      }
+
+      let streamClient = new WHEPClient(url, videoEl.current);
+      (window as any).streamClient = streamClient;
+
+      setSomeOtherVar(true);
+
+      streamClient.peerConnection.addEventListener(
+        "connectionstatechange",
+        async () => {
+          console.log(
+            "[peerConnection] connectionstatechange",
+            streamClient.peerConnection.connectionState
+          );
+
+          if (
+            streamClient.peerConnection.connectionState == "disconnected" ||
+            streamClient.peerConnection.connectionState == "failed"
+          ) {
+            setVideo(false);
+            if (props.videoRef.current) {
+              await cleanupStreamClient();
+              props.videoRef.current.srcObject = null;
+            }
+            await setupWHEPClient(url);
+          }
+          if (streamClient.peerConnection.connectionState == "connected") {
+            if (props.videoRef.current) {
+              console.log("Set Video True", setVideo);
+              setSomeOtherVar(true);
+              setVideo(true);
+              setTimeout(() => {
+                if (props.videoRef.current) {
+                  props.videoRef.current.srcObject = streamClient.stream;
+                  props.videoRef.current.play();
+                }
+              }, 100);
+            }
+          }
+        }
+      );
+    };
+
+    console.log("Video Render");
+
+    return (
+      <>
+        <video
+          ref={props.videoRef as LegacyRef<HTMLVideoElement> | undefined}
+          id="watch"
+          autoPlay={true}
+          // controls={true}
+          playsInline={true}
+          // style={video ? {} : { height: "1px" }}
+          muted={user.type == "stream" ? true : false}
+        ></video>
+        {props.video ? null : (
+          <>
+            <div className="loading-video">
+              <h2 className="payment">Loading video...</h2>
+            </div>
+          </>
+        )}
+      </>
+    );
+  };
+
+  const parentMethod = (data) => {
+    console.log("[parentMethod]", data);
+    setInitialVideoLoad(true);
+  };
+
+  console.log("App render", "video", video);
+
   return (
     <div className="page">
       {user.type == "stream" ? null : (
         <>
-          {loginNotice ? null : (
+          {loginNotice ? (
             <>
-              <TipUI chatRef={chatRef} user={user} />
+              <div className="waiting">
+                <LoginUI notice={loginNotice} authUser={authUser} />
+                <SignupUI notice={signupNotice} authUser={authUser} />
+              </div>
             </>
-          )}
-          {video ? null : (
-            <>
-              {loginNotice ? (
-                <>
-                  <div className="waiting">
-                    <LoginUI notice={loginNotice} authUser={authUser} />
-                    <SignupUI notice={signupNotice} authUser={authUser} />
-                  </div>
-                </>
-              ) : (
-                <div className="loading-video">
-                  <h2 className="payment">Loading video...</h2>
-                </div>
-              )}
-            </>
-          )}
+          ) : null}
         </>
       )}
       {user.type ? (
         <>
-          <video
-            ref={videoEl as LegacyRef<HTMLVideoElement> | undefined}
-            id="watch"
-            autoPlay={true}
-            controls={true}
-            style={video ? {} : { height: "1px" }}
-            muted={user.type == "stream" ? true : false}
-          ></video>
+          <Video
+            user={user}
+            video={video}
+            videoRef={videoEl}
+            initialVideoLoad={initialVideoLoad}
+            parentMethod={parentMethod}
+            setInitialVideoLoad={setInitialVideoLoad}
+          />
           <Chat
             ref={chatRef}
             videoRef={videoEl}
             authUser={authUser}
             user={user}
+            setUser={setUser}
+            chats={chats}
+            setChats={setChats}
+            initialChatsLoad={initialChatsLoad}
+            parentMethod={parentMethod}
+            setInitialChatsLoad={setInitialChatsLoad}
           />
         </>
       ) : null}

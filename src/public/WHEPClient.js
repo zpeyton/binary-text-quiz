@@ -35,6 +35,10 @@ export default class WHEPClient {
      *
      * https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/track_event
      */
+    this.peerConnection.onaddtrack = (event) => {
+      console.log("onaddtrack");
+    };
+
     this.peerConnection.ontrack = (event) => {
       //console.log("ontrack track " + event);
 

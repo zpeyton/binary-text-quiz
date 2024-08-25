@@ -3,7 +3,7 @@ body {
   /* padding: 20px 20px; */
   padding: 0;
   font-family: Verdana, Geneva, Tahoma, sans-serif;
-  background-color: #555;
+  background-color: #c55959;
   color: white;
 }
 
@@ -26,6 +26,8 @@ video {
   -webkit-transform: rotateY(180deg);
   -moz-transform: rotateY(180deg);  */
   transform: scale(-1, 1);
+  position: fixed;
+  top: 20px;
 }
 
 .stripe-form {
@@ -67,31 +69,31 @@ input[name="tip-amount"] {
 }
 
 .tip {
-  position: fixed;
+  /* position: fixed;
   top: 20px;
-  right: 20px;
-  background-color: #c55959;
-  padding: 10px 10px 10px 10px;
-  z-index: 2;
-  border: 1px solid #fff;
-  border-radius: 8px;
+  right: 20px; */
+  /* background-color: #c55959; */
+  /* padding: 10px 10px 10px 10px; */
+  /* z-index: 2; */
+  /* border: 1px solid #fff;
+  border-radius: 8px; */
 }
 
 .tip-ui {
-  float: left;
+  /* position: relative; */
   /* border: 1px solid #fff; */
   /* padding: 6px 8px; */
+  /* padding-right: 30px; */
   /* margin-top: -8px; */
-  margin-right: 8px;
-  border-radius: 8px;
+  /* margin-right: 8px; */
+  /* border-radius: 8px; */
 }
 
 .chat-ui {
   /* padding: 10px; */
   width: 100%;
   position: fixed;
-  bottom: 1px;
-  background-color: #555;
+  bottom: 20px;
   z-index: 1;
 }
 
@@ -124,44 +126,91 @@ h2.payment {
   grid-template-columns: auto auto;
 }
 
+svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 0px;
+}
+
 .chat {
   display: grid;
-  width: 100vw;
-  grid-template-columns: 12fr 70px;
-  gap: 8px;
-  padding: 10px 0px;
+  width: calc(100vw - 20px);
+  grid-template-columns: 12fr 150px;
+  gap: 10px;
+  padding: 10px 10px;
   background-color: #c55959;
 }
 
+.chat.twoevencols {
+  grid-template-columns: 6fr 6fr;
+}
+
 .chat > div:first-child {
-  padding-left: 10px;
+  /* padding-left: 10px; */
+  position: relative;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  padding-right: 30px;
 }
 
 .chat > div:last-child {
-  text-align: center;
+  /* text-align: center; */
   /* padding-left: 4px; */
   /* background-color: #f00; */
+  position: relative;
+  padding-right: 30px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
 }
 .chat-ui .toggle {
-  margin-left: 10px;
-  margin-bottom: 10px;
+  margin-left: 6px;
+  margin-bottom: 6px;
 }
 
 .chat input {
   /* max-width: 300px; */
-  width: calc(100% - 4px);
+  overflow: hidden;
+  display: grid;
+  font-size: 16px;
   /* margin-left: 10px; */
   /* margin-right: 10px; */
+  -webkit-appearance: none;
+  background: none;
+  padding: 0px 0px;
+
+  text-indent: 10px;
+  border: none;
+  color: white;
+  letter-spacing: 1px;
+  height: 30px;
+  overflow: hidden;
+  outline: none;
 }
 
-.chat button {
-  width: calc(100% - 20px);
+.chat a {
+  /* width: calc(100% - 20px); */
+  display: flex;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 20px;
+  height: 20px;
+  width: 20px;
+  color: #ccc;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  background-color: #c55959;
+  padding: 0px 0px 0px 0px;
+  /* margin-right: 4px; */
 }
 
 .chat-log {
   height: 150px;
   overflow: auto;
-  margin-bottom: 6px;
+  background-color: #861e1e;
 }
 
 .chat-log > div {
@@ -170,6 +219,10 @@ h2.payment {
   grid-template-columns: auto 18px 12fr;
   /* background-color: #ccc; */
   /* gap: 10px; */
+}
+
+.chat-log > div:last-child {
+  padding-bottom: 10px;
 }
 
 .chat-log div span {
@@ -186,6 +239,11 @@ h2.payment {
   color: rgb(140, 140, 177);
   /* text-overflow: ellipsis; */
   /* margin-right: 8px; */
+}
+
+.controls {
+  text-align: right;
+  margin-right: 6px;
 }
 
 .flex-center {
@@ -228,7 +286,7 @@ h2.payment {
   }
 
   /* video {
-    width: 100vw;
+    height: calc(100dvh);
   } */
 
   .loading-video {
