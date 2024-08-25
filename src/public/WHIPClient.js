@@ -30,12 +30,12 @@ export default class WHIPClient {
      * https://www.ietf.org/archive/id/draft-ietf-wish-whip-01.html
      */
     this.peerConnection.addEventListener("negotiationneeded", async (ev) => {
-      console.log("Connection negotiation starting");
+      console.log("[WHIPClient] Connection negotiation starting");
       await negotiateConnectionWithClientOffer(
         this.peerConnection,
         this.endpoint
       );
-      console.log("Connection negotiation ended");
+      console.log("[WHIPClient] Connection negotiation ended");
     });
     /**
      * While the connection is being initialized,
@@ -76,46 +76,41 @@ export default class WHIPClient {
     return videoTranciever;
   }
 
-  async switchCamera() {
+  async switchCamera(videoRef) {
     let currentDevice = this.device;
-    console.log("[switchCamera] current device", currentDevice);
+    console.log("[WHIPClient.switchCamera] currently", currentDevice);
 
-    let backCamera = await this.getBackCamera();
+    // let backCamera = await this.getBackCamera();
 
     let constraints = { video: { height: 720, width: 1280 }, audio: true };
 
     if (currentDevice == "Front Camera") {
-      constraints.video = {
-        deviceId: backCamera.deviceId,
-        height: 720,
-        width: 1280,
-      };
-
-      //constraints.video = { facingMode: "environment" };
+      //constraints.video.deviceId = backCamera.deviceId;
+      constraints.video.facingMode = "environment";
       this.device = "Back Camera";
     } else {
       this.device = "Front Camera";
-      //constraints.video = { facingMode: "user" };
+      constraints.video.facingMode = "user";
     }
 
-    console.log("[switchCamera] constraints", constraints);
+    // console.log("[switchCamera] constraints", constraints);
 
     let stream = await navigator.mediaDevices.getUserMedia(constraints);
 
-    console.log("new Stream", stream);
+    // console.log("new Stream", stream);
 
     stream.getTracks().forEach(async (track) => {
-      console.log("getTracks track", track.label);
+      // console.log("getTracks track", track.label);
       let videoTranciever = await this.getVideoTranciever();
 
       if (track.label.indexOf("Camera") > -1) {
-        console.log("track label", track.label);
-        console.log("videoTranciever", videoTranciever);
+        // console.log("track label", track.label);
+        // console.log("videoTranciever", videoTranciever);
         // const transceiver = this.peerConnection.addTransceiver(track, {
         //   /** WHIP is only for sending streaming media */
         //   direction: "sendonly",
         // });
-        console.log("Replace Track");
+        console.log("Replace Track", this.device);
 
         videoTranciever.sender.replaceTrack(track);
 
@@ -135,8 +130,10 @@ export default class WHIPClient {
 
     this.localStream = stream;
 
-    console.log("[WHIPClient] Video Element", this.videoElement);
+    this.videoElement = videoRef.current;
     this.videoElement.srcObject = stream;
+
+    console.debug("[WHIPClient] Video Element", this.videoElement);
   }
 
   /**
@@ -151,7 +148,7 @@ export default class WHIPClient {
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
         stream.getTracks().forEach((track) => {
-          console.log(track.label);
+          // console.log(track.label);
           const transceiver = this.peerConnection.addTransceiver(track, {
             /** WHIP is only for sending streaming media */
             direction: "sendonly",

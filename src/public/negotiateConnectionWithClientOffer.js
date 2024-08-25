@@ -23,10 +23,13 @@ export default async function negotiateConnectionWithClientOffer(
   if (!ofr) {
     throw Error("failed to gather ICE candidates for offer");
   }
+
+  // scaling
+  let negotiate = true;
   /**
    * As long as the connection is open, attempt to...
    */
-  while (peerConnection.connectionState !== "closed") {
+  while (peerConnection.connectionState !== "closed" || negotiate) {
     /**
      * This response contains the server's SDP offer.
      * This specifies how the client should communicate,
@@ -42,8 +45,17 @@ export default async function negotiateConnectionWithClientOffer(
       // });
       //console.log(response);
       if (response.status == 400) {
-        // console.log(400);
+        console.debug(
+          "Cancel negotiation if 400 error, the stream is not live!"
+        );
+        //await new Promise((r) => setTimeout(r, 15000));
+        //negotiate = false;
+
+        await peerConnection.close();
+        //delete window.streamClient;
+        return;
       }
+
       if (response.status === 201) {
         let answerSDP = await response.text();
         await peerConnection.setRemoteDescription(

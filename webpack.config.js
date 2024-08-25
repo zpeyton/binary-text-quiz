@@ -48,6 +48,8 @@ var asgConfig = Object.assign({}, commonConfig, {
       NODE_ENV: process.env.NODE_ENV,
       STRIPE_PUBLISHABLE_KEY_DEV: process.env.STRIPE_PUBLISHABLE_KEY_DEV,
       STRIPE_PUBLISHABLE_KEY_PROD: process.env.STRIPE_PUBLISHABLE_KEY_PROD,
+      STRIPE_PUBLISHABLE_KEY_PROD: process.env.STRIPE_PUBLISHABLE_KEY_PROD,
+      VIDEO_ENABLED: process.env.VIDEO_ENABLED,
     }),
     // process.env.NODE_ENV === "production" ? new BomPlugin(true) : false,
   ],

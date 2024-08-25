@@ -81,10 +81,11 @@ export default class WHEPClient {
     //     this.videoElement.srcObject = this.stream;
     //   }
     //});
+    this.negotiate = negotiateConnectionWithClientOffer;
 
     this.peerConnection.addEventListener("negotiationneeded", (ev) => {
-      console.log("negotiationneeded");
-      negotiateConnectionWithClientOffer(this.peerConnection, this.endpoint);
+      console.debug("[WHEPCLient] negotiationneeded");
+      this.negotiate(this.peerConnection, this.endpoint);
     });
   }
 }

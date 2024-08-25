@@ -5,7 +5,7 @@ let APIRoot = PROD
   ? "https://asg-test.zapteck.workers.dev"
   : "https://localhost:8787";
 
-console.log("APIRoot", APIRoot);
+console.debug("APIRoot", APIRoot);
 
 let dev = process.env.STRIPE_PUBLISHABLE_KEY_DEV;
 let prod = process.env.STRIPE_PUBLISHABLE_KEY_PROD;
@@ -38,7 +38,7 @@ export class API {
     try {
       res = await fetch(config.url, fetchConfig);
       resJson = await res.json();
-      console.log("[API] Call", resJson);
+      console.debug("[API] Call", resJson);
       if (resJson.message == "Server Error") {
         resJson.status = "500";
         alert(
@@ -48,7 +48,7 @@ export class API {
 
       return resJson;
     } catch (e) {
-      console.log("[API] Error", fetchConfig, e);
+      console.warn("[API] Error", fetchConfig, e);
       return { status: "fail" };
     }
   }
