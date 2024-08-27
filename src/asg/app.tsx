@@ -10,6 +10,90 @@ import WS from "../asg-shared/websocket/websocket";
 const whip = new WHIP();
 const whep = new WHEP();
 
+let PROD = process.env.NODE_ENV == "production";
+let host = PROD ? "asg-live.zapteck.workers.dev" : "localhost:9000";
+
+let websocketUrl = `wss://${host}/`;
+
+let webSocketConfig = {
+  url: websocketUrl,
+  events: {},
+};
+
+class Auth {
+  async send(ws) {
+    let authToken = localStorage.getItem("authToken");
+    let request = {
+      method: "post",
+      path: "Auth",
+      headers: { Authorization: authToken },
+    };
+
+    await ws.send(request);
+  }
+
+  async receive(props) {
+    let { setUser, cleanupStreamClient } = props;
+    let { status } = props.response;
+    let { user } = props.response.data;
+
+    if (status == "fail") {
+      props.setLoginNotice("Login");
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("user");
+      setUser({});
+      await cleanupStreamClient();
+      return;
+    }
+
+    setUser(user);
+
+    return;
+  }
+}
+
+class Chat {
+  async receive(props) {
+    console.log("[Route.Chat]", props);
+    let { data } = props.response;
+    props.chatRef.current.newChat(data);
+  }
+}
+
+class User {
+  async receive(props) {
+    let { response, chatRef } = props;
+    let { joined, quit, user } = response.data;
+    let { current: chat } = chatRef;
+
+    if (joined) {
+      chat.newMembers(response.data);
+    }
+
+    if (quit) {
+      chat.removeMembers(response.data);
+    }
+  }
+}
+
+class VideoRoute {
+  async receive(props) {
+    let { live } = props.response.data;
+    if (live && props.user.type != "stream") {
+      setTimeout(() => {
+        window.location.reload();
+      }, 5000);
+    }
+  }
+}
+
+class Routes {
+  Auth = new Auth();
+  User = new User();
+  Chat = new Chat();
+  Video = new VideoRoute();
+}
+
 export const App = () => {
   let [user, setUser] = useState<any>({});
   let [video, setVideo] = useState(false);
@@ -29,62 +113,62 @@ export const App = () => {
   };
 
   let initWebSocket = () => {
-    let { username } = user;
+    webSocketConfig.events = {
+      open: async (ws, event) => {
+        // console.debug("[WS]", "open", event);
+        new Routes().Auth.send(ws);
+      },
+      close: (ws, event) => {
+        console.log("[WS]", "close", event);
+        window.location.reload();
+      },
+      error: (ws, event) => {
+        console.log("[WS]", "error", event);
+      },
+      message: async (ws, event) => {
+        let response = await ws.receive(event.data);
 
-    // TODO: generate a new room ID when the live session starts
-    // this.storage.deleteAll() to delete the old room?
+        let handler = new Routes()[response.request.path];
 
-    let PROD = process.env.NODE_ENV == "production";
-    let host = PROD ? "asg-live.zapteck.workers.dev" : "localhost:9000";
+        let props = {
+          ws,
+          response,
+          user,
+          setUser,
+          loginNotice,
+          setLoginNotice,
+          cleanupStreamClient,
+          chatRef,
+          videoRef,
+        };
 
-    let room = PROD
-      ? "f90eacab58705de980a4e51d25d41fdf1c9d1121ecda877e810d1cecfac157af"
-      : "8d93923a4a41daf7b7885aacff1371bda08136a64759ac13a4d696eaa2053d24";
+        let result = await handler.receive(props);
 
-    let url = `wss://${host}/api/room/${room}/websocket`;
+        console.log("handler result", result);
 
-    let config = {
-      url,
-      events: {
-        open: (ws, event) => {
-          let data = { name: username };
-          // console.debug("[WS]", "open", event);
-          setTimeout(() => {
-            // console.debug("[WS]", "join the room", ws);
-            ws.send(data); // Join the room
-          }, 500);
-        },
-        close: (ws, event) => {
-          console.log("[WS]", "close", event);
-        },
-        error: (ws, event) => {
-          console.log("[WS]", "error", event);
-        },
-        message: (ws, event) => {
-          let json = ws.receive(event.data);
+        return;
 
-          if (json.live && user.type != "stream") {
-            setTimeout(() => {
-              window.location.reload();
-            }, 5000);
-          }
+        // if (json.live && user.type != "stream") {
+        //   setTimeout(() => {
+        //     window.location.reload();
+        //   }, 5000);
+        // }
 
-          if (json.joined) {
-            chatRef.current.newMembers(json);
-          }
+        // if (json.joined) {
+        //   chatRef.current.newMembers(json);
+        // }
 
-          if (json.quit) {
-            chatRef.current.removeMembers(json);
-          }
+        // if (json.quit) {
+        //   chatRef.current.removeMembers(json);
+        // }
 
-          if (json.message) {
-            chatRef.current.newChat(json);
-          }
-        },
+        // if (json.message) {
+        //   chatRef.current.newChat(json);
+        // }
       },
     };
 
-    webSocket.current = new WS(config);
+    webSocket.current = new WS(webSocketConfig);
   };
 
   let authUser = async (creds?) => {
@@ -146,8 +230,8 @@ export const App = () => {
 
   useEffect(() => {
     // console.log("[UseEffect] APP");
-    // localStorage.removeItem("chats");
-    authUser();
+
+    initWebSocket();
 
     window.addEventListener("pagehide", async function (event) {
       event.stopPropagation();
@@ -163,9 +247,7 @@ export const App = () => {
     if (!user.type) {
       return;
     }
-    // console.debug("[UseEffect] User changed", user);
-
-    initWebSocket();
+    console.debug("[UseEffect] User changed", user);
   }, [user]);
 
   // console.debug("App render");
@@ -195,7 +277,6 @@ export const App = () => {
             setVideo={setVideo}
             webSocket={webSocket}
           />
-          {/* <Chat ref={chatRef} user={user} whip={whip} videoRef={videoRef} /> */}
           <WebSocketChat
             ref={chatRef}
             user={user}

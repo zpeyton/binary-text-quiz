@@ -8,6 +8,7 @@ export class WHIP {
   client;
   videoRef;
   loaded;
+  recorder;
 
   init(config) {
     let { publish } = config.user;
@@ -49,6 +50,11 @@ export class WHIP {
       .then((stream) => {
         this.client.localStream = stream;
         this.videoRef.current.srcObject = stream;
+        this.recorder = new MediaRecorder(stream, {
+          mimeType: "video/mp4",
+        });
+        this.recorder.start();
+        console.log("[WHIP] Recorder state", this.recorder.state);
       })
       .catch(console.error);
 
@@ -165,31 +171,32 @@ export class WHEP {
 
     this.client.peerConnection.onicegatheringstatechange = (event) => {
       if (event.target.iceGatheringState === "complete") {
-        this.loadVideo();
+        this.connect();
       }
     };
   }
 
-  async loadVideo() {
+  async connect() {
     let { peerConnection } = this.client;
 
-    console.log("loadVideo", this.client.peerConnection.localDescription.sdp);
+    console.log("[WHEP.connect]");
 
     let response = await fetch(this.play, {
       method: "POST",
       mode: "cors",
       headers: { "content-type": "application/sdp" },
-      body: this.client.peerConnection.localDescription.sdp,
+      body: peerConnection.localDescription.sdp,
     });
 
     let answerSDP = await response.text();
     if (response.status == 400) {
-      console.log("answerSDP 400", answerSDP);
+      console.log("[WHEP.connect]", 400);
       return;
     }
-    console.log("got anawer");
 
-    await this.client.peerConnection.setRemoteDescription(
+    console.log("[WHEP.connect]", "OK");
+
+    await peerConnection.setRemoteDescription(
       new RTCSessionDescription({ type: "answer", sdp: answerSDP })
     );
   }

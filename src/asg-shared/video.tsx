@@ -9,6 +9,9 @@ import React, {
 import { WHEP, WHIP } from "./webrtc";
 
 export const Video = (props) => {
+  let [videoLink, setVideoLink] = useState<any>();
+  let recorder = useRef<any>();
+
   useEffect(() => {
     // console.debug("[Video]", "[useEffect]", "no deps");
 
@@ -49,6 +52,11 @@ export const Video = (props) => {
           if (props.videoRef.current) {
             props.videoRef.current.srcObject = whep.client.stream;
             props.videoRef.current.play();
+            recorder.current = new MediaRecorder(whep.client.stream, {
+              mimeType: "video/mp4",
+            });
+
+            recorder.current.start();
           }
         },
       };
@@ -56,6 +64,28 @@ export const Video = (props) => {
     }
   }, []);
 
+  const saveVideo = () => {
+    console.debug("[Video] saveVideo");
+    let { current: videoRecorder } = recorder;
+
+    videoRecorder.stop();
+
+    videoRecorder.ondataavailable = (e) => {
+      console.log("REcorder.ondataavailable");
+      let a = () => {
+        let url = ["video_", (new Date() + "").slice(4, 28), ".mp4"].join("");
+        let href = URL.createObjectURL(e.data);
+        console.log("REcorder.ondataavailable a", url, href);
+        return (
+          <a download={url} href={href}>
+            {url}
+          </a>
+        );
+      };
+
+      setVideoLink(a());
+    };
+  };
   // console.debug("[Video] render", props);
 
   return (
@@ -69,6 +99,11 @@ export const Video = (props) => {
         style={props.user.type == "stream" ? { transform: "scale(-1, 1)" } : {}}
         muted={true}
       ></video>
+      {props.user.username == "testuser" ? (
+        <>
+          <a onClick={saveVideo}>Record Stop</a> Link: {videoLink}
+        </>
+      ) : null}
       {props.video ? null : (
         <>
           <div className="loading-video">

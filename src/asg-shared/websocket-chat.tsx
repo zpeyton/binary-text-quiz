@@ -122,7 +122,7 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
         <div className="controls">
           {props.user.type != "stream" ? (
             <button className="toggle" onClick={toggleVolume}>
-              Mute
+              Unmute
             </button>
           ) : (
             <button className="toggle" onClick={toggleCamera}>
@@ -135,7 +135,7 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
           </button>
         </div>
         <div>
-          {members.length ? <>Viewers {members.length}</> : null}
+          {members.length ? <>Users: {members.length}</> : null}
           {members &&
             members.map((item, index) => {
               return (

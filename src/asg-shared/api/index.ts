@@ -3,7 +3,7 @@ import { random } from "lodash";
 let PROD = process.env.NODE_ENV == "production";
 let APIRoot = PROD
   ? "https://asg-test.zapteck.workers.dev"
-  : "https://localhost:8787";
+  : "https://localhost:9000";
 
 console.debug("APIRoot", APIRoot);
 
