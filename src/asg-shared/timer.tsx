@@ -1,3 +1,5 @@
+import React from "react";
+
 export class Timer {
   timeout;
   delay = 2000;
@@ -26,3 +28,15 @@ export class Timer {
     clearTimeout(this.timeout);
   }
 }
+
+export const TimerEl = (props) => {
+  // console.log("Timer El");
+
+  if (window[props.name + "Timer"]) {
+    window[props.name + "Timer"].clear();
+  }
+
+  window[props.name + "Timer"] = new Timer(props);
+
+  return <></>;
+};

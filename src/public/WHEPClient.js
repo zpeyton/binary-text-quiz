@@ -83,9 +83,9 @@ export default class WHEPClient {
     //});
     this.negotiate = negotiateConnectionWithClientOffer;
 
-    this.peerConnection.addEventListener("negotiationneeded", (ev) => {
-      console.debug("[WHEPCLient] negotiationneeded");
-      this.negotiate(this.peerConnection, this.endpoint);
-    });
+    // this.peerConnection.addEventListener("negotiationneeded", (ev) => {
+    //   console.debug("[WHEPCLient] negotiationneeded");
+    //   this.negotiate(this.peerConnection, this.endpoint);
+    // });
   }
 }

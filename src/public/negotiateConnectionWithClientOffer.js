@@ -14,6 +14,7 @@ export default async function negotiateConnectionWithClientOffer(
   peerConnection,
   endpoint
 ) {
+  return;
   /** https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createOffer */
   const offer = await peerConnection.createOffer();
   /** https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/setLocalDescription */

@@ -11,15 +11,17 @@ import * as Icons from "../asg-shared/icons";
 import { TipUI } from "./tips";
 import { TimerEl } from "./timer";
 
-export const Chat = forwardRef((props: any, ref) => {
-  let chatsCache = localStorage.getItem("chats");
-  let initChats = [];
-  if (chatsCache) {
-    console.debug("[Chat] Use chats cache on rerender");
-    initChats = JSON.parse(chatsCache);
-  }
+import Chat from "../asg-shared/websocket/chat";
 
-  let [chats, setChats] = useState<any>(initChats);
+export const WebSocketChat = forwardRef((props: any, ref) => {
+  //console.debug("[WS] WebSocketChat start");
+
+  let [chats, setChats] = useState<any>([]);
+  let [newChats, setNewChats] = useState<any>([]);
+
+  let [members, setMembers] = useState<any>([]);
+  let [newMembers, setNewMembers] = useState<any>([]);
+
   let [display, setDisplay] = useState<any>("");
   let [twoevencols, setTwoevencols] = useState<any>(false);
   let inputChat = useRef<HTMLInputElement>();
@@ -27,9 +29,22 @@ export const Chat = forwardRef((props: any, ref) => {
   let chatLog = useRef<HTMLDivElement>();
 
   useImperativeHandle(ref, () => ({
-    get() {
-      get();
+    newChat(json) {
+      // console.log("[WS]", "newChat");
+      setNewChats([json]);
     },
+    newMembers(json) {
+      // console.log("[WS]", "newMembers");
+      setNewMembers([json]);
+    },
+
+    removeMembers(json) {
+      // console.log("[WS]", "removeMembers");
+      let filtered = members.filter((member) => member.joined != json.quit);
+      // console.log("filtered", filtered);
+      setMembers(filtered);
+    },
+
     toggle() {
       toggle();
     },
@@ -39,18 +54,21 @@ export const Chat = forwardRef((props: any, ref) => {
   }));
 
   useEffect(() => {
-    // console.log("[Chats.UseEffect]");
-
-    if (!props.user.type) {
-      console.log("[Chat] loaded but no user");
-      return; // user not set yet
-    }
+    // console.log("[WS]", "[WebSocketChat.UseEffect]");
   }, []);
 
   useEffect(() => {
     chatLog.current?.scrollTo(0, chatLog.current.scrollHeight);
     //inputChat.current?.focus();
   }, [chats]);
+
+  useEffect(() => {
+    setChats(chats.concat(newChats));
+  }, [newChats]);
+
+  useEffect(() => {
+    setMembers(members.concat(newMembers));
+  }, [newMembers]);
 
   const toggleTwoevencols = () => {
     setTwoevencols(twoevencols ? "" : "twoevencols");
@@ -87,62 +105,20 @@ export const Chat = forwardRef((props: any, ref) => {
       return;
     }
 
-    let msg = inputChat.current.value;
-    if (msg) {
+    let message = inputChat.current.value;
+    if (message) {
       inputChat.current.value = "";
-      await sendChatAPI(msg);
-      await get();
+      //await sendChatAPI(msg);
+      //await get();
+      props.webSocket.current.send({ message });
     }
   };
 
-  const get = async () => {
-    console.debug("[Chat.get]");
-
-    if (!props.user.type) {
-      return;
-    }
-
-    let chatsCache = localStorage.getItem("chats");
-
-    if (chatsCache) {
-      chats = JSON.parse(chatsCache);
-    }
-
-    let lastChat = chats[chats.length - 1];
-    let lastChatId = lastChat?.id || 0;
-
-    let getNewChats = await getChatsAPI(lastChatId);
-
-    if (getNewChats.status == "fail") {
-      console.log("getNewChats.status == fail");
-
-      if (getNewChats.message == "Not Authorized") {
-        window.location.reload();
-        // or something?
-      }
-      return;
-    }
-
-    let { messages } = getNewChats.data;
-
-    if (messages.length) {
-      let concat = chats.concat(messages);
-      console.debug("[Chat.get] Set Chats");
-
-      localStorage.setItem("chats", JSON.stringify(concat));
-
-      setChats(concat);
-
-      return;
-    }
-  };
+  //console.debug("[WS] Render");
 
   return (
     <>
       <div className={"chat-ui"}>
-        {/* {chats.length ? (
-          <TimerEl delay="4000" name="chat" callback={get} />
-        ) : null} */}
         <div className="controls">
           {props.user.type != "stream" ? (
             <button className="toggle" onClick={toggleVolume}>
@@ -158,6 +134,17 @@ export const Chat = forwardRef((props: any, ref) => {
             X
           </button>
         </div>
+        <div>
+          {members.length ? <>Viewers {members.length}</> : null}
+          {members &&
+            members.map((item, index) => {
+              return (
+                <div key={index}>
+                  <span>{item.joined}</span>
+                </div>
+              );
+            })}
+        </div>
         <div
           className={"chat-log " + display}
           ref={chatLog as LegacyRef<HTMLDivElement> | undefined}
@@ -166,7 +153,7 @@ export const Chat = forwardRef((props: any, ref) => {
             chats.map((item, index) => {
               return (
                 <div key={index}>
-                  <span>{item.username}</span>
+                  <span>{item.name}</span>
                   <span>:</span>
                   <span>{item.message}</span>
                 </div>

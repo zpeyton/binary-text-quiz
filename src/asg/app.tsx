@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { loginAPI, tokenAPI } from "../asg-shared/api";
 import { WHEP, WHIP } from "../asg-shared/webrtc";
-import { Timer } from "../asg-shared/timer";
 import { Video } from "../asg-shared/video";
-import { Chat } from "../asg-shared/chat";
 import { LoginUI, SignupUI } from "../asg-shared/auth";
+import { WebSocketChat } from "../asg-shared/websocket-chat";
+
+import WS from "../asg-shared/websocket/websocket";
 
 const whip = new WHIP();
 const whep = new WHEP();
@@ -14,8 +15,10 @@ export const App = () => {
   let [video, setVideo] = useState(false);
   let [loginNotice, setLoginNotice] = useState<any>("");
   let [signupNotice, setSignupNotice] = useState<any>("");
-  let videoEl = useRef<HTMLVideoElement>();
+  let videoRef = useRef<HTMLVideoElement>();
   let chatRef = useRef<any>();
+
+  let webSocket = useRef<any>();
 
   let cleanupStreamClient = async () => {
     whip.client?.peerConnection?.close();
@@ -23,6 +26,58 @@ export const App = () => {
     if (whip.client?.disconnectStream) {
       await whip.client?.disconnectStream();
     }
+  };
+
+  let initWebSocket = () => {
+    let { username } = user;
+
+    // TODO: generate a new room ID when the live session starts
+    // this.storage.deleteAll() to delete the old room?
+
+    let PROD = process.env.NODE_ENV == "production";
+    let host = PROD ? "asg-live.zapteck.workers.dev" : "localhost:9000";
+
+    let room = PROD
+      ? "f90eacab58705de980a4e51d25d41fdf1c9d1121ecda877e810d1cecfac157af"
+      : "8d93923a4a41daf7b7885aacff1371bda08136a64759ac13a4d696eaa2053d24";
+
+    let url = `wss://${host}/api/room/${room}/websocket`;
+
+    let config = {
+      url,
+      events: {
+        open: (ws, event) => {
+          let data = { name: username };
+          // console.debug("[WS]", "open", event);
+          setTimeout(() => {
+            // console.debug("[WS]", "join the room", ws);
+            ws.send(data); // Join the room
+          }, 500);
+        },
+        close: (ws, event) => {
+          console.log("[WS]", "close", event);
+        },
+        error: (ws, event) => {
+          console.log("[WS]", "error", event);
+        },
+        message: (ws, event) => {
+          let json = ws.receive(event.data);
+          if (json.joined) {
+            chatRef.current.newMembers(json);
+          }
+
+          if (json.quit) {
+            chatRef.current.removeMembers(json);
+          }
+
+          if (json.message) {
+            chatRef.current.newChat(json);
+          }
+        },
+      },
+    };
+
+    webSocket.current = new WS(config);
   };
 
   let authUser = async (creds?) => {
@@ -44,7 +99,7 @@ export const App = () => {
         setLoginNotice("");
       }
       localStorage.setItem("user", JSON.stringify(validateToken.data.user));
-      // console.log("[authToken] Valid setUser");
+      // console.log("[WS][authToken] Valid setUser");
       setUser(validateToken.data.user);
 
       return;
@@ -84,35 +139,27 @@ export const App = () => {
 
   useEffect(() => {
     // console.log("[UseEffect] APP");
-    localStorage.removeItem("chats");
+    // localStorage.removeItem("chats");
     authUser();
+
+    window.addEventListener("pagehide", async function (event) {
+      event.stopPropagation();
+      event.preventDefault();
+
+      // console.log("pagehide");
+      webSocket.current.ws.close(1000, "Logged Out");
+      // console.log("webSocket readyState", webSocket.current.ws.readyState);
+    });
   }, []);
 
   useEffect(() => {
     if (!user.type) {
       return;
     }
+    // console.debug("[UseEffect] User changed", user);
 
-    console.debug("[UseEffect] User changed", user);
-
-    // once we have the user get messages
-
-    if (chatRef.current) {
-      chatRef.current.get();
-    }
+    initWebSocket();
   }, [user]);
-
-  const TimerEl = (props) => {
-    // console.log("Timer El");
-
-    if (window[props.name + "Timer"]) {
-      window[props.name + "Timer"].clear();
-    }
-
-    window[props.name + "Timer"] = new Timer(props);
-
-    return <></>;
-  };
 
   console.debug("App render");
 
@@ -137,10 +184,17 @@ export const App = () => {
             whip={whip}
             whep={whep}
             video={video}
-            videoRef={videoEl}
+            videoRef={videoRef}
             setVideo={setVideo}
           />
-          <Chat ref={chatRef} user={user} whip={whip} videoRef={videoEl} />
+          {/* <Chat ref={chatRef} user={user} whip={whip} videoRef={videoRef} /> */}
+          <WebSocketChat
+            ref={chatRef}
+            user={user}
+            whip={whip}
+            videoRef={videoRef}
+            webSocket={webSocket}
+          />
         </>
       ) : null}
     </div>
