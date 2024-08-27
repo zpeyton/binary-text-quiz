@@ -23,14 +23,14 @@ export default class WS {
   }
 
   send(data) {
-    // console.debug("[WS]", "send", data);
+    console.debug("[WS]", "send", data);
     let json = JSON.stringify(data);
     this.ws.send(json);
   }
 
   receive(data) {
     let json = JSON.parse(data);
-    // console.debug("[WS]", "recieve", json);
+    console.debug("[WS]", "recieve", json);
     return json;
   }
 }

@@ -29,24 +29,27 @@ export default class WHIPClient {
      * https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/negotiationneeded_event
      * https://www.ietf.org/archive/id/draft-ietf-wish-whip-01.html
      */
-    this.peerConnection.addEventListener("negotiationneeded", async (ev) => {
-      console.log("[WHIPClient] Connection negotiation starting");
-      await negotiateConnectionWithClientOffer(
-        this.peerConnection,
-        this.endpoint
-      );
-      console.log("[WHIPClient] Connection negotiation ended");
-    });
+    // this.peerConnection.addEventListener("negotiationneeded", async (ev) => {
+    //   console.log(
+    //     "[WHIPClient] Connection negotiation starting",
+    //     this.endpoint
+    //   );
+    //   await negotiateConnectionWithClientOffer(
+    //     this.peerConnection,
+    //     this.endpoint
+    //   );
+    //   console.log("[WHIPClient] Connection negotiation ended");
+    // });
     /**
      * While the connection is being initialized,
      * connect the video stream to the provided <video> element.
      */
-    this.accessLocalMediaSources()
-      .then((stream) => {
-        this.localStream = stream;
-        videoElement.srcObject = stream;
-      })
-      .catch(console.error);
+    // this.accessLocalMediaSources()
+    //   .then((stream) => {
+    //     this.localStream = stream;
+    //     videoElement.srcObject = stream;
+    //   })
+    //   .catch(console.error);
   }
 
   /**

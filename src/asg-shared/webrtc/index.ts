@@ -7,16 +7,26 @@ export class WHIP {
   publish;
   client;
   videoRef;
+  loaded;
 
   init(config) {
     let { publish } = config.user;
     this.videoRef = config.videoRef;
+    this.publish = publish;
+
     if (!this.videoRef) {
       console.log("[WHIP] No Video ref");
       return;
     }
 
+    if (this.loaded) {
+      return;
+    }
+
+    this.loaded = true;
     this.client = new WHIPClient(publish, this.videoRef.current);
+
+    this.loaded = true;
 
     let { peerConnection } = this.client;
 
@@ -31,6 +41,81 @@ export class WHIP {
         config[state](this);
       }
     });
+
+    console.debug("[WHIP.init]");
+
+    this.client
+      .accessLocalMediaSources()
+      .then((stream) => {
+        this.client.localStream = stream;
+        this.videoRef.current.srcObject = stream;
+      })
+      .catch(console.error);
+
+    peerConnection.addEventListener("negotiationneeded", async () => {
+      console.log("[WHEP.peerConnection]", "negotiationneeded");
+
+      await this.negotiate();
+    });
+
+    // peerConnection.onicegatheringstatechange = (event) => {
+    //   let { iceGatheringState: state } = event.target;
+    //   console.log(
+    //     "[WHEP.init]",
+    //     "onicegatheringstatechange",
+    //     event.target.iceGatheringState
+    //   );
+
+    //   if (state === "complete") {
+    //     console.log("[WHEP.init]", "iceGatheringState", state);
+    //   }
+    // };
+  }
+
+  async negotiate() {
+    console.log("[Whip.negotiate]");
+    await this.setLocalDescription();
+    await this.waitToCompleteICEGathering();
+    await this.connect();
+  }
+
+  async setLocalDescription() {
+    console.log("[Whip.setLocalDescription"); //peerConnection.localDescription.sdp
+    const offer = await this.client.peerConnection.createOffer();
+    await this.client.peerConnection.setLocalDescription(offer);
+  }
+
+  async waitToCompleteICEGathering() {
+    return new Promise((resolve) => {
+      this.client.peerConnection.onicegatheringstatechange = (evt) => {
+        // console.log("test", evt.target.iceGatheringState);
+        evt.target.iceGatheringState === "complete" && resolve("Done");
+      };
+    });
+  }
+
+  async connect() {
+    let { peerConnection } = this.client;
+
+    console.log("[Whip.connect]"); //peerConnection.localDescription.sdp
+
+    let response = await fetch(this.publish, {
+      method: "POST",
+      mode: "cors",
+      headers: { "content-type": "application/sdp" },
+      body: peerConnection.localDescription.sdp,
+    });
+
+    let answerSDP = await response.text();
+
+    if (response.status == 400) {
+      console.log("answerSDP 400", answerSDP);
+      return;
+    }
+
+    await peerConnection.setRemoteDescription(
+      new RTCSessionDescription({ type: "answer", sdp: answerSDP })
+    );
   }
 
   update(config) {
@@ -59,7 +144,7 @@ export class WHEP {
 
     let changeEvent = "connectionstatechange";
 
-    peerConnection.addEventListener(changeEvent, async () => {
+    this.client.peerConnection.addEventListener(changeEvent, async () => {
       let { connectionState: state } = peerConnection;
 
       console.debug("[WHEPClient.peerConnection] state", state);
@@ -69,13 +154,16 @@ export class WHEP {
       }
     });
 
-    this.client.peerConnection.addEventListener("negotiationneeded", () => {
-      const offer = this.client.peerConnection.createOffer();
-      this.client.peerConnection.setLocalDescription(offer);
-      this.ofr = offer;
-    });
+    this.client.peerConnection.addEventListener(
+      "negotiationneeded",
+      async () => {
+        console.log("[WHEP.init]", "negotiationneeded");
+        const offer = await this.client.peerConnection.createOffer();
+        await this.client.peerConnection.setLocalDescription(offer);
+      }
+    );
 
-    peerConnection.onicegatheringstatechange = (event) => {
+    this.client.peerConnection.onicegatheringstatechange = (event) => {
       if (event.target.iceGatheringState === "complete") {
         this.loadVideo();
       }
@@ -83,20 +171,24 @@ export class WHEP {
   }
 
   async loadVideo() {
-    console.log("loadVideo");
+    let { peerConnection } = this.client;
+
+    console.log("loadVideo", this.client.peerConnection.localDescription.sdp);
 
     let response = await fetch(this.play, {
       method: "POST",
       mode: "cors",
       headers: { "content-type": "application/sdp" },
-      body: this.ofr.sdp,
+      body: this.client.peerConnection.localDescription.sdp,
     });
 
     let answerSDP = await response.text();
-
-    if (response.status) {
+    if (response.status == 400) {
+      console.log("answerSDP 400", answerSDP);
       return;
     }
+    console.log("got anawer");
+
     await this.client.peerConnection.setRemoteDescription(
       new RTCSessionDescription({ type: "answer", sdp: answerSDP })
     );

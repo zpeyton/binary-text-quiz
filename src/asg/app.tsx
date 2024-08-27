@@ -62,6 +62,13 @@ export const App = () => {
         },
         message: (ws, event) => {
           let json = ws.receive(event.data);
+
+          if (json.live && user.type != "stream") {
+            setTimeout(() => {
+              window.location.reload();
+            }, 5000);
+          }
+
           if (json.joined) {
             chatRef.current.newMembers(json);
           }
@@ -161,7 +168,7 @@ export const App = () => {
     initWebSocket();
   }, [user]);
 
-  console.debug("App render");
+  // console.debug("App render");
 
   return (
     <div className="page">
@@ -186,6 +193,7 @@ export const App = () => {
             video={video}
             videoRef={videoRef}
             setVideo={setVideo}
+            webSocket={webSocket}
           />
           {/* <Chat ref={chatRef} user={user} whip={whip} videoRef={videoRef} /> */}
           <WebSocketChat

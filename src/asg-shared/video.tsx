@@ -20,24 +20,17 @@ export const Video = (props) => {
     }
 
     if (props.user.type == "stream") {
-      //setupWHIPClient();
-      props.setVideo(true);
-
       let whipConfig = {
         user: props.user,
         videoRef: props.videoRef,
         // disconnected: () => {
         //   props.setVideo(false);
         // },
-        // connected: (whip) => {
-        //   console.debug("[Whip] connected");
-
-        //   props.setVideo(true);
-        //   if (props.videoRef.current) {
-        //     props.videoRef.current.srcObject = whip.client.localStream;
-        //     //videoEl.current.play();
-        //   }
-        // },
+        connected: (whip) => {
+          console.debug("[Whip] connected");
+          props.setVideo(true);
+          props.webSocket.current.send({ live: true });
+        },
       };
 
       props.whip.init(whipConfig);
@@ -73,8 +66,8 @@ export const Video = (props) => {
         autoPlay={true}
         // controls={true}
         playsInline={true}
-        // style={video ? {} : { height: "1px" }}
-        muted={props.user.type == "stream" ? true : false}
+        style={props.user.type == "stream" ? { transform: "scale(-1, 1)" } : {}}
+        muted={true}
       ></video>
       {props.video ? null : (
         <>
