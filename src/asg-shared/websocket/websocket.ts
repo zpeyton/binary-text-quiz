@@ -2,6 +2,7 @@ export default class WS {
   ws;
   request;
   response;
+  state = {};
   constructor(config) {
     if (!config || !config.url) {
       console.log("[WS]", "Missing WS URL");
@@ -37,9 +38,10 @@ export default class WS {
 
   // just handle the response like the server does
 
-  // async fetch(data) {
-  //   this.request = data;
-  //   this.send(data);
-  //   return this;
-  // }
+  async setState(props) {
+    for (let i in props) {
+      this.state[i] = props[i];
+    }
+    return this;
+  }
 }

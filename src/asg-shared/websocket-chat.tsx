@@ -12,6 +12,7 @@ import { TipUI } from "./tips";
 import { TimerEl } from "./timer";
 
 import Chat from "../asg-shared/websocket/chat";
+import { Routes } from "./routes";
 
 export const WebSocketChat = forwardRef((props: any, ref) => {
   //console.debug("[WS] WebSocketChat start");
@@ -55,6 +56,7 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
 
   useEffect(() => {
     // console.log("[WS]", "[WebSocketChat.UseEffect]");
+    props.webSocket.current.setState(props);
   }, []);
 
   useEffect(() => {
@@ -67,6 +69,7 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
   }, [newChats]);
 
   useEffect(() => {
+    props.webSocket.current.setState(props);
     setMembers(members.concat(newMembers));
   }, [newMembers]);
 
@@ -110,7 +113,8 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
       inputChat.current.value = "";
       //await sendChatAPI(msg);
       //await get();
-      props.webSocket.current.send({ message });
+      new Routes().Chat.send(props.webSocket.current, message);
+      //props.webSocket.current.send({ message });
     }
   };
 

@@ -6,6 +6,7 @@ import { LoginUI, SignupUI } from "../asg-shared/auth";
 import { WebSocketChat } from "../asg-shared/websocket-chat";
 
 import WS from "../asg-shared/websocket/websocket";
+import { Routes } from "../asg-shared/routes";
 
 const whip = new WHIP();
 const whep = new WHEP();
@@ -19,80 +20,6 @@ let webSocketConfig = {
   url: websocketUrl,
   events: {},
 };
-
-class Auth {
-  async send(ws) {
-    let authToken = localStorage.getItem("authToken");
-    let request = {
-      method: "post",
-      path: "Auth",
-      headers: { Authorization: authToken },
-    };
-
-    await ws.send(request);
-  }
-
-  async receive(props) {
-    let { setUser, cleanupStreamClient } = props;
-    let { status } = props.response;
-    let { user } = props.response.data;
-
-    if (status == "fail") {
-      props.setLoginNotice("Login");
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("user");
-      setUser({});
-      await cleanupStreamClient();
-      return;
-    }
-
-    setUser(user);
-
-    return;
-  }
-}
-
-class Chat {
-  async receive(props) {
-    console.log("[Route.Chat]", props);
-    let { data } = props.response;
-    props.chatRef.current.newChat(data);
-  }
-}
-
-class User {
-  async receive(props) {
-    let { response, chatRef } = props;
-    let { joined, quit, user } = response.data;
-    let { current: chat } = chatRef;
-
-    if (joined) {
-      chat.newMembers(response.data);
-    }
-
-    if (quit) {
-      chat.removeMembers(response.data);
-    }
-  }
-}
-
-class VideoRoute {
-  async receive(props) {
-    let { live } = props.response.data;
-    if (live && props.user.type != "stream") {
-      setTimeout(() => {
-        window.location.reload();
-      }, 5000);
-    }
-  }
-}
-
-class Routes {
-  Auth = new Auth();
-  User = new User();
-  Chat = new Chat();
-  Video = new VideoRoute();
-}
 
 export const App = () => {
   let [user, setUser] = useState<any>({});
@@ -128,43 +55,18 @@ export const App = () => {
       message: async (ws, event) => {
         let response = await ws.receive(event.data);
 
+        if (!response.request) {
+          console.log("Missing request path");
+          return;
+        }
+
         let handler = new Routes()[response.request.path];
 
-        let props = {
-          ws,
-          response,
-          user,
-          setUser,
-          loginNotice,
-          setLoginNotice,
-          cleanupStreamClient,
-          chatRef,
-          videoRef,
-        };
+        let result = await handler.receive({ ws, response });
 
-        let result = await handler.receive(props);
-
-        console.log("handler result", result);
+        // console.log("handler result", result);
 
         return;
-
-        // if (json.live && user.type != "stream") {
-        //   setTimeout(() => {
-        //     window.location.reload();
-        //   }, 5000);
-        // }
-
-        // if (json.joined) {
-        //   chatRef.current.newMembers(json);
-        // }
-
-        // if (json.quit) {
-        //   chatRef.current.removeMembers(json);
-        // }
-
-        // if (json.message) {
-        //   chatRef.current.newChat(json);
-        // }
       },
     };
 
@@ -232,6 +134,11 @@ export const App = () => {
     // console.log("[UseEffect] APP");
 
     initWebSocket();
+    webSocket.current.setState({
+      setUser,
+      setLoginNotice,
+      cleanupStreamClient,
+    });
 
     window.addEventListener("pagehide", async function (event) {
       event.stopPropagation();
@@ -248,6 +155,12 @@ export const App = () => {
       return;
     }
     console.debug("[UseEffect] User changed", user);
+    webSocket.current.setState({
+      user,
+      loginNotice,
+      chatRef,
+      videoRef,
+    });
   }, [user]);
 
   // console.debug("App render");

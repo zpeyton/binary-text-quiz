@@ -8,6 +8,8 @@ import React, {
 } from "react";
 import { WHEP, WHIP } from "./webrtc";
 
+import { Routes } from "./routes";
+
 export const Video = (props) => {
   let [videoLink, setVideoLink] = useState<any>();
   let recorder = useRef<any>();
@@ -32,7 +34,8 @@ export const Video = (props) => {
         connected: (whip) => {
           console.debug("[Whip] connected");
           props.setVideo(true);
-          props.webSocket.current.send({ live: true });
+          //props.webSocket.current.send({ live: true });
+          new Routes().Video.send(props.webSocket.current, { live: true });
         },
       };
 
