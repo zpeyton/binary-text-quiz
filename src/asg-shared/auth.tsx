@@ -167,7 +167,7 @@ export const LoginUI = (props) => {
           ref={usernameRef as LegacyRef<HTMLInputElement> | undefined}
           name="username"
           placeholder="username"
-          defaultValue={"testuser"}
+          defaultValue={process.env.NODE_ENV != "production" ? "testuser" : ""}
           onKeyDown={inputKeyDown}
         />
         {errors.some((item) => item.type == "username") ? (
@@ -179,7 +179,7 @@ export const LoginUI = (props) => {
           onKeyDown={inputKeyDown}
           ref={passwordRef as LegacyRef<HTMLInputElement> | undefined}
           name="password"
-          defaultValue={"asg808"}
+          defaultValue={process.env.NODE_ENV != "production" ? "1234" : ""}
           placeholder="password"
         />
       </p>

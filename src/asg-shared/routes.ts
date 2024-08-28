@@ -35,25 +35,23 @@ class User {
 
     await new Promise((r) => {
       let wait = setInterval(() => {
-        if (props.ws.state.chatRef?.current) {
+        let { chatRef } = props.ws.state;
+        if (chatRef.current) {
           clearInterval(wait);
           r(true);
         }
       }, 100);
     });
 
-    let { joined, quit, user } = response.data;
+    let { joined, quit } = response.data;
+    let { current: chat } = props.ws.state.chatRef;
 
     if (joined) {
-      setTimeout(() => {
-        props.ws.state.chatRef.current.newMembers(response.data);
-      }, 0);
+      chat.newMembers(response.data);
     }
 
     if (quit) {
-      setTimeout(() => {
-        props.ws.state.chatRef.current.removeMembers(response.data);
-      }, 0);
+      chat.removeMembers(response.data);
     }
   }
 }
@@ -95,7 +93,7 @@ class Login {
       body: { creds },
       headers: {},
     };
-    console.log("[Routes.Login.send]", ws, creds);
+    console.debug("[Routes.Login.send]", ws, creds);
     await ws.send(request);
   }
 

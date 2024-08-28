@@ -45,8 +45,20 @@ export const App = () => {
         // console.debug("[WS]", "open", event);
         new Routes().Auth.send(ws);
       },
-      close: (ws, event) => {
+      close: async (ws, event) => {
         console.log("[WS]", "close", event);
+        await new Promise(async (r) => {
+          let interval = setInterval(async (a) => {
+            try {
+              let checkServer = await fetch(`https://${host}/`);
+              if (checkServer) {
+                clearInterval(interval);
+                r(true);
+              }
+            } catch (e) {}
+          }, 20000);
+        });
+
         window.location.reload();
       },
       error: (ws, event) => {
@@ -143,6 +155,15 @@ export const App = () => {
       event.preventDefault();
 
       // console.log("pagehide");
+      webSocket.current.ws.close(1000, "Logged Out");
+      // console.log("webSocket readyState", webSocket.current.ws.readyState);
+    });
+
+    window.addEventListener("unload", function (event) {
+      event.stopPropagation();
+      event.preventDefault();
+
+      console.log("unload");
       webSocket.current.ws.close(1000, "Logged Out");
       // console.log("webSocket readyState", webSocket.current.ws.readyState);
     });

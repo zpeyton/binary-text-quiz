@@ -41,9 +41,6 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
     },
 
     removeMembers(json) {
-      console.log("[WS]", "removeMembers", members);
-      let filtered = members.filter((member) => member.joined != json.quit);
-      console.log("filtered", filtered);
       setRemoveMembers(json);
     },
 
@@ -70,7 +67,7 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
   }, [newChats]);
 
   useEffect(() => {
-    console.log("[Chat]", "members changed", members);
+    // console.log("[Chat]", "members changed", members);
   }, [members]);
 
   useEffect(() => {
@@ -83,7 +80,7 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
     let filtered = members.filter(
       (member) => member.joined != removeMembers.quit
     );
-    console.log("filtered", filtered);
+    // console.log("filtered", filtered);
     setMembers(filtered);
   }, [removeMembers]);
 

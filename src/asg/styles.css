@@ -101,15 +101,20 @@ h2.payment {
 .login {
   position: absolute;
   background-color: #861e1e;
-
+  padding: 10px;
   z-index: 3;
+  right: 0;
+  cursor: pointer;
 }
 
 .waiting {
+  position: fixed;
+  width: 100vw;
   padding: 34px 20px;
   background-color: #c55959;
   display: grid;
   grid-template-columns: auto auto;
+  z-index: 1;
 }
 
 svg {
