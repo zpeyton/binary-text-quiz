@@ -1,5 +1,6 @@
 import React, { LegacyRef, useEffect, useRef, useState } from "react";
 import { signupAPI } from "./api";
+import { Routes } from "./routes";
 
 export const SignupUI = (props) => {
   let usernameRef = useRef<HTMLInputElement>();
@@ -127,7 +128,7 @@ export const LoginUI = (props) => {
     usernameRef?.current?.focus();
   });
 
-  let loginSubmit = () => {
+  let loginSubmit = async () => {
     if (!usernameRef.current || !passwordRef.current) {
       return;
     }
@@ -148,7 +149,11 @@ export const LoginUI = (props) => {
       return;
     }
 
-    props.authUser({ username, password });
+    await new Routes().Login.send(props.webSocket.current, {
+      username,
+      password,
+    });
+    // props.authUser({ username, password });
   };
 
   return props.notice ? (
@@ -162,6 +167,7 @@ export const LoginUI = (props) => {
           ref={usernameRef as LegacyRef<HTMLInputElement> | undefined}
           name="username"
           placeholder="username"
+          defaultValue={"testuser"}
           onKeyDown={inputKeyDown}
         />
         {errors.some((item) => item.type == "username") ? (
@@ -173,6 +179,7 @@ export const LoginUI = (props) => {
           onKeyDown={inputKeyDown}
           ref={passwordRef as LegacyRef<HTMLInputElement> | undefined}
           name="password"
+          defaultValue={"asg808"}
           placeholder="password"
         />
       </p>

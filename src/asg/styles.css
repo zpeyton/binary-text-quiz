@@ -16,6 +16,7 @@ p {
   color: white;
   margin: 20px 0;
 }
+
 video {
   width: 100vw;
   /* 100% and 100vw cause issues? */
@@ -95,6 +96,13 @@ h2.payment {
   height: calc(100vh + 1px);
   width: 100vw;
   overflow: visible;
+}
+
+.login {
+  position: absolute;
+  background-color: #861e1e;
+
+  z-index: 3;
 }
 
 .waiting {

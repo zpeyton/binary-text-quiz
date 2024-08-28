@@ -64,8 +64,6 @@ export const App = () => {
 
         let result = await handler.receive({ ws, response });
 
-        // console.log("handler result", result);
-
         return;
       },
     };
@@ -172,15 +170,30 @@ export const App = () => {
           {loginNotice ? (
             <>
               <div className="waiting">
-                <LoginUI notice={loginNotice} authUser={authUser} />
-                <SignupUI notice={signupNotice} authUser={authUser} />
+                <LoginUI notice={loginNotice} webSocket={webSocket} />
+                <SignupUI notice={signupNotice} webSocket={webSocket} />
               </div>
             </>
           ) : null}
         </>
       )}
+
       {user.type ? (
         <>
+          {user.type == "guest" && !loginNotice ? (
+            <>
+              <a
+                onClick={() => {
+                  setLoginNotice("Login");
+                  setLoginNotice("Login");
+                }}
+                className="login"
+              >
+                Login / Sign up
+              </a>
+            </>
+          ) : null}
+
           <Video
             user={user}
             whip={whip}

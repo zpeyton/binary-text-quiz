@@ -15,9 +15,16 @@ class Chat {
     console.debug("[Route.Chat]", props);
     let { data } = props.response;
 
-    if (props.ws.state.chatRef?.current) {
-      props.ws.state.chatRef.current.newChat(data);
-    }
+    await new Promise((r) => {
+      let wait = setInterval(() => {
+        if (props.ws.state.chatRef?.current) {
+          clearInterval(wait);
+          r(true);
+        }
+      }, 100);
+    });
+
+    props.ws.state.chatRef.current.newChat(data);
   }
 }
 
@@ -26,26 +33,27 @@ class User {
     console.debug("[Route.User]", props);
     let { response } = props;
 
-    if (!props.ws.state.chatRef) {
-      console.debug("No chat ref", response);
-      await new Promise((r) => {
-        let wait = setInterval(() => {
-          if (props.ws.state.chatRef.current) {
-            clearInterval(wait);
-            r(true);
-          }
-        }, 100);
-      });
-    }
+    await new Promise((r) => {
+      let wait = setInterval(() => {
+        if (props.ws.state.chatRef?.current) {
+          clearInterval(wait);
+          r(true);
+        }
+      }, 100);
+    });
 
     let { joined, quit, user } = response.data;
 
     if (joined) {
-      props.ws.state.chatRef.current.newMembers(response.data);
+      setTimeout(() => {
+        props.ws.state.chatRef.current.newMembers(response.data);
+      }, 0);
     }
 
     if (quit) {
-      props.ws.state.chatRef.current.removeMembers(response.data);
+      setTimeout(() => {
+        props.ws.state.chatRef.current.removeMembers(response.data);
+      }, 0);
     }
   }
 }
@@ -74,9 +82,47 @@ class VideoRoute {
   }
 }
 
+class Login {
+  async send(ws, creds) {
+    let { username, password } = creds;
+    if (!username || !password) {
+      return console.log("Missing creds");
+    }
+
+    let request = {
+      method: "post",
+      path: "Login",
+      body: { creds },
+      headers: {},
+    };
+    console.log("[Routes.Login.send]", ws, creds);
+    await ws.send(request);
+  }
+
+  async receive(props) {
+    let { status } = props.response;
+    let { user } = props.response.data;
+    let { setUser, cleanupStreamClient, setLoginNotice } = props.ws.state;
+
+    if (status == "fail") {
+      setLoginNotice("Login Failed - Try again");
+      return;
+    }
+
+    localStorage.setItem("authToken", user.auth_token);
+    setLoginNotice("");
+    setUser(user);
+  }
+}
+
 class Auth {
   async send(ws) {
     let authToken = localStorage.getItem("authToken");
+    // do we auth here even if there
+    // is no auth token?
+    // if(!authToken){
+    //     return;
+    // }
     let request = {
       method: "post",
       path: "Auth",
@@ -91,13 +137,16 @@ class Auth {
     let { status } = props.response;
     let { user } = props.response.data;
 
+    // for now we let them in
+    // need to show login button now
+
     if (status == "fail") {
-      setLoginNotice("Login");
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("user");
-      setUser({});
-      await cleanupStreamClient();
-      return;
+      //   setLoginNotice("Login");
+      //   localStorage.removeItem("authToken");
+      //   localStorage.removeItem("user");
+      //   setUser({});
+      //   await cleanupStreamClient();
+      //   return;
     }
 
     setUser(user);
@@ -111,4 +160,5 @@ export class Routes {
   User = new User();
   Chat = new Chat();
   Video = new VideoRoute();
+  Login = new Login();
 }

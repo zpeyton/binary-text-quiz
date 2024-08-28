@@ -22,6 +22,7 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
 
   let [members, setMembers] = useState<any>([]);
   let [newMembers, setNewMembers] = useState<any>([]);
+  let [removeMembers, setRemoveMembers] = useState<any>([]);
 
   let [display, setDisplay] = useState<any>("");
   let [twoevencols, setTwoevencols] = useState<any>(false);
@@ -40,10 +41,10 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
     },
 
     removeMembers(json) {
-      // console.log("[WS]", "removeMembers");
+      console.log("[WS]", "removeMembers", members);
       let filtered = members.filter((member) => member.joined != json.quit);
-      // console.log("filtered", filtered);
-      setMembers(filtered);
+      console.log("filtered", filtered);
+      setRemoveMembers(json);
     },
 
     toggle() {
@@ -69,9 +70,22 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
   }, [newChats]);
 
   useEffect(() => {
+    console.log("[Chat]", "members changed", members);
+  }, [members]);
+
+  useEffect(() => {
     props.webSocket.current.setState(props);
     setMembers(members.concat(newMembers));
   }, [newMembers]);
+
+  useEffect(() => {
+    props.webSocket.current.setState(props);
+    let filtered = members.filter(
+      (member) => member.joined != removeMembers.quit
+    );
+    console.log("filtered", filtered);
+    setMembers(filtered);
+  }, [removeMembers]);
 
   const toggleTwoevencols = () => {
     setTwoevencols(twoevencols ? "" : "twoevencols");
