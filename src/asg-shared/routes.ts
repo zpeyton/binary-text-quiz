@@ -189,6 +189,58 @@ class Auth {
   }
 }
 
+class Pay {
+  async send(ws, body?) {
+    let authToken = localStorage.getItem("authToken");
+    let headers = { Authorization: authToken };
+    if (!body) {
+      let request = {
+        method: "get",
+        path: "Pay",
+        headers,
+      };
+      await ws.send(request);
+      return;
+    }
+
+    let request = {
+      method: "post",
+      path: "Pay",
+      headers,
+      body,
+    };
+
+    await ws.send(request);
+    return;
+  }
+
+  async receive(props) {
+    let { ws, response } = props;
+    let { setStripeSession, setErrorMessage, resetAddFunds } = ws.state;
+    let { data: session } = response;
+    let { request } = response;
+
+    if (request.method == "get") {
+      if (session.status == "fail") {
+        setErrorMessage(session.message);
+        return;
+      }
+      setStripeSession(session);
+    }
+
+    if (request.method == "post") {
+      if (session.status == "fail") {
+        setErrorMessage(session.message);
+        return;
+      }
+
+      if (session.intent.status == "succeeded") {
+        resetAddFunds(session.newBalance);
+      }
+    }
+  }
+}
+
 export class Routes {
   Auth = new Auth();
   User = new User();
@@ -196,4 +248,5 @@ export class Routes {
   Video = new VideoRoute();
   Login = new Login();
   Signup = new Signup();
+  Pay = new Pay();
 }

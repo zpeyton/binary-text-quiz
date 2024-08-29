@@ -15,6 +15,7 @@ import * as Icons from "../asg-shared/icons";
 
 import { Elements as StripeElements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
+import { Routes } from "./routes";
 
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY || "");
 
@@ -66,25 +67,32 @@ export const StripePaymentForm = (props) => {
     // send token to server to create payment intent
 
     let postBody = {
-      confirmationToken: confirmationToken.id,
+      confirmation_token: confirmationToken.id,
       customer: props.session.customerId,
       amount: props.amount * 100,
     };
 
-    let res = await createPaymentAPI(postBody);
-    if (res.status == "fail") {
-      console.log(res.message);
-      setErrorMessage(res.message);
-      return;
-    }
+    props.webSocket.current.setState({
+      setErrorMessage,
+      resetAddFunds: props.resetAddFunds,
+    });
 
-    console.log("[StripePaymentForm] payment intent", res.data.intent);
-    console.log("[StripePaymentForm] payment new balance", res.data.newBalance);
-    // success
-    if (res.data.intent.status == "succeeded") {
-      alert("Thank you for your order. Your account balance has been updated.");
-      props.resetAddFunds(res.data.newBalance);
-    }
+    new Routes().Pay.send(props.webSocket.current, postBody);
+
+    // let res = await createPaymentAPI(postBody);
+    // if (res.status == "fail") {
+    //   console.log(res.message);
+    //   setErrorMessage(res.message);
+    //   return;
+    // }
+
+    // console.log("[StripePaymentForm] payment intent", res.data.intent);
+    // console.log("[StripePaymentForm] payment new balance", res.data.newBalance);
+    // // success
+    // if (res.data.intent.status == "succeeded") {
+    //   alert("Thank you for your order. Your account balance has been updated.");
+    //   props.resetAddFunds(res.data.newBalance);
+    // }
   };
 
   return (
@@ -104,10 +112,14 @@ export const StripePaymentForm = (props) => {
 export const PaymentUI = (props) => {
   let [stripeSession, setStripeSession] = useState<any>();
   let [stripeOptions, setStripeOptions] = useState<any>();
+  const [errorMessage, setErrorMessage] = useState();
 
   let getPaymentSession = async () => {
-    let res = await getPaySessionAPI();
-    setStripeSession(res.data);
+    console.log("[PaymentUI.getPaymentSession] Get Stripe Session");
+    props.webSocket.current.setState({ setErrorMessage, setStripeSession });
+    new Routes().Pay.send(props.webSocket.current);
+    // let res = await getPaySessionAPI();
+    // setStripeSession(res.data);
   };
 
   useEffect(() => {
@@ -144,6 +156,7 @@ export const PaymentUI = (props) => {
 
   return (
     <>
+      {errorMessage && <div className="error">! {errorMessage}</div>}
       {stripeOptions ? (
         <StripeElements stripe={stripePromise} options={stripeOptions}>
           <StripePaymentForm
@@ -151,6 +164,7 @@ export const PaymentUI = (props) => {
             user={props.user}
             session={stripeSession}
             resetAddFunds={props.resetAddFunds}
+            webSocket={props.webSocket}
           />
         </StripeElements>
       ) : null}
@@ -226,6 +240,7 @@ export const AddFundsUI = (props) => {
     <>
       {updateCreditCard ? (
         <PaymentUI
+          webSocket={props.webSocket}
           resetAddFunds={resetAddFunds}
           user={props.user}
           amount={inputAmountRef.current?.value}
@@ -345,7 +360,13 @@ export const TipUI = (props) => {
         errors.map((error, index) => {
           return <span key="index">! {error.message}</span>;
         })}
-      {noMoney ? <AddFundsUI resetTips={resetTips} user={props.user} /> : null}
+      {noMoney ? (
+        <AddFundsUI
+          webSocket={props.webSocket}
+          resetTips={resetTips}
+          user={props.user}
+        />
+      ) : null}
       {errors.length ? null : (
         <>
           <a

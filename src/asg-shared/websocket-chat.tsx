@@ -1,14 +1,14 @@
-import React, {
+import {
+  React,
   forwardRef,
-  LegacyRef,
   useEffect,
   useImperativeHandle,
   useRef,
   useState,
-} from "react";
-import * as Icons from "../asg-shared/icons";
-import { TipUI } from "./tips";
-import { Routes } from "./routes";
+  Routes,
+  Icons,
+  TipUI,
+} from "../asg-shared";
 
 export const WebSocketChat = forwardRef((props: any, ref) => {
   //console.debug("[WS] WebSocketChat start");
@@ -156,10 +156,7 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
               );
             })}
         </div>
-        <div
-          className={"chat-log " + display}
-          ref={chatLog as LegacyRef<HTMLDivElement> | undefined}
-        >
+        <div className={"chat-log " + display} ref={chatLog as any}>
           {chats &&
             chats.map((item, index) => {
               return (
@@ -176,19 +173,15 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
             <input
               name="message"
               placeholder={props.user.username + ", what's up?"}
-              ref={inputChat as LegacyRef<HTMLInputElement> | undefined}
+              ref={inputChat as any}
               onKeyDown={chatKeyDown}
             />
-            <a
-              href="#"
-              ref={btnSendChat as LegacyRef<HTMLAnchorElement> | undefined}
-              onClick={sendChat}
-            >
+            <a href="#" ref={btnSendChat as any} onClick={sendChat}>
               <Icons.upArrow />
             </a>
           </div>
 
-          <TipUI chatRef={ref} user={props.user} />
+          <TipUI webSocket={props.webSocket} chatRef={ref} user={props.user} />
         </div>
       </div>
     </>
