@@ -1,23 +1,16 @@
-import React, {
+import {
+  React,
+  Icons,
+  Routes,
+  useEffect,
+  useRef,
+  useState,
+  stripePromise,
   PaymentElement,
   useElements,
   useStripe,
-} from "@stripe/react-stripe-js";
-import { LegacyRef, useEffect, useRef, useState } from "react";
-import {
-  addFundsAPI,
-  createPaymentAPI,
-  getPaySessionAPI,
-  sendTipAPI,
-  STRIPE_PUBLISHABLE_KEY,
-} from "./api";
-import * as Icons from "../asg-shared/icons";
-
-import { Elements as StripeElements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
-import { Routes } from "./routes";
-
-const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY || "");
+  StripeElements,
+} from "../asg-shared";
 
 export const StripePaymentForm = (props) => {
   const stripe = useStripe();
@@ -258,12 +251,9 @@ export const AddFundsUI = (props) => {
             // defaultValue="20"
             onKeyDown={amountKeyDown}
             maxLength={3}
-            ref={inputAmountRef as LegacyRef<HTMLInputElement> | undefined}
+            ref={inputAmountRef as any}
           />{" "}
-          <a
-            ref={btnAddMoney as LegacyRef<HTMLAnchorElement> | undefined}
-            onClick={addMoney}
-          >
+          <a ref={btnAddMoney as any} onClick={addMoney}>
             <Icons.dollarSign />
           </a>
         </>
@@ -333,25 +323,32 @@ export const TipUI = (props) => {
 
     inputAmountRef.current.value = amount.toString();
 
-    let res = await sendTipAPI({ amount });
+    props.webSocket.current.setState({
+      setNoMoney,
+      setErrors,
+      setBalance,
+    });
 
-    if (res.status == "fail") {
-      console.log("Send Tip failed");
-      if (res.message == "No money") {
-        setNoMoney(true);
-        props.chatRef.current.toggleTwoevencols();
-      }
+    new Routes().Tip.send(props.webSocket.current, { amount });
 
-      setErrors([res]);
-      return;
-    }
+    // let res = await sendTipAPI({ amount });
 
-    if (res.status == "OK") {
-      // reload chat
-      setBalance(res.data.newBalance);
-      props.chatRef.current.get();
-      return;
-    }
+    // if (res.status == "fail") {
+    //   console.log("Send Tip failed");
+    //   if (res.message == "No money") {
+    //     setNoMoney(true);
+    //     props.chatRef.current.toggleTwoevencols();
+    //   }
+
+    //   setErrors([res]);
+    //   return;
+    // }
+
+    // if (res.status == "OK") {
+    //   setBalance(res.data.newBalance);
+    //   // props.chatRef.current.get();
+    //   return;
+    // }
   };
 
   return (
@@ -369,10 +366,7 @@ export const TipUI = (props) => {
       ) : null}
       {errors.length ? null : (
         <>
-          <a
-            ref={btnSendTip as LegacyRef<HTMLAnchorElement> | undefined}
-            onClick={sendTip}
-          >
+          <a ref={btnSendTip as any} onClick={sendTip}>
             <Icons.dollarSign />
           </a>
           <input
@@ -382,7 +376,7 @@ export const TipUI = (props) => {
             // type="number"
             maxLength={3}
             onKeyDown={amountKeyDown}
-            ref={inputAmountRef as LegacyRef<HTMLInputElement> | undefined}
+            ref={inputAmountRef as any}
           />
         </>
       )}

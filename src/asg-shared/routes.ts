@@ -36,7 +36,7 @@ class User {
     await new Promise((r) => {
       let wait = setInterval(() => {
         let { chatRef } = props.ws.state;
-        if (chatRef.current) {
+        if (chatRef?.current) {
           clearInterval(wait);
           r(true);
         }
@@ -241,6 +241,43 @@ class Pay {
   }
 }
 
+class Tip {
+  async send(ws, body?) {
+    let authToken = localStorage.getItem("authToken");
+    let headers = { Authorization: authToken };
+    let request = {
+      method: "post",
+      path: "Tip",
+      headers,
+      body,
+    };
+
+    await ws.send(request);
+  }
+  async receive(props) {
+    let { ws, response } = props;
+    let { setNoMoney, setErrors, setBalance } = ws.state;
+    let { chatRef } = ws.state;
+
+    if (response.status == "fail") {
+      console.log("Send Tip failed");
+      if (response.message == "No money") {
+        setNoMoney(true);
+        chatRef.current.toggleTwoevencols();
+      }
+
+      setErrors([response]);
+      return;
+    }
+
+    if (response.status == "OK") {
+      let { newBalance } = response.data;
+      setBalance(newBalance);
+      return;
+    }
+  }
+}
+
 export class Routes {
   Auth = new Auth();
   User = new User();
@@ -249,4 +286,5 @@ export class Routes {
   Login = new Login();
   Signup = new Signup();
   Pay = new Pay();
+  Tip = new Tip();
 }

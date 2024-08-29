@@ -46,6 +46,16 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
     toggleTwoevencols() {
       toggleTwoevencols();
     },
+
+    serverDisconnected() {
+      setNewChats([
+        {
+          name: "Server",
+          message: "Disconnected. Refreshing in 20 seconds",
+          timestamp: new Date(),
+        },
+      ]);
+    },
   }));
 
   useEffect(() => {

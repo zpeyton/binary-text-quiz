@@ -14,8 +14,26 @@ import { WHIP, WHEP } from "./webrtc";
 import { WebSocketChat } from "./websocket-chat";
 import { TipUI } from "./tips";
 
+import { loadStripe } from "@stripe/stripe-js";
+
+import {
+  PaymentElement,
+  useElements,
+  useStripe,
+  Elements as StripeElements,
+} from "@stripe/react-stripe-js";
+
 const whip = new WHIP();
 const whep = new WHEP();
+
+let dev = process.env.STRIPE_PUBLISHABLE_KEY_DEV;
+let prod = process.env.STRIPE_PUBLISHABLE_KEY_PROD;
+
+let PROD = process.env.NODE_ENV == "production";
+
+const STRIPE_PUBLISHABLE_KEY = PROD ? prod : dev;
+
+const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY || "");
 
 export {
   React,
@@ -34,4 +52,9 @@ export {
   Video,
   WebSocketChat,
   TipUI,
+  stripePromise,
+  PaymentElement,
+  useElements,
+  useStripe,
+  StripeElements,
 };

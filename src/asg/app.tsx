@@ -54,6 +54,7 @@ export const App = (props) => {
         },
         close: async (ws, event) => {
           console.log("[WS]", "close", event);
+          chatRef.current.serverDisconnected();
           await new Promise(async (r) => {
             let interval = setInterval(async (a) => {
               try {
