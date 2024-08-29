@@ -44,28 +44,38 @@ export const SignupUI = (props) => {
       return;
     }
 
+    let { current: webSocket } = props.webSocket;
+
+    webSocket.setState({ setErrors });
+
+    await new Routes().Signup.send(webSocket, {
+      email,
+      username,
+      password,
+    });
+
     //props.signup();
 
-    let res = await signupAPI({ email, username, password });
+    // let res = await signupAPI({ email, username, password });
 
-    if (res.status == "fail") {
-      console.log("Sign up fail");
-      // setSignupNotice(res.message);
-      setErrors([{ type: "general", message: res.message }]);
-      return;
-    }
+    // if (res.status == "fail") {
+    //   console.log("Sign up fail");
+    //   // setSignupNotice(res.message);
+    //   setErrors([{ type: "general", message: res.message }]);
+    //   return;
+    // }
 
     // after sign up we should return an auth_token so we can auth
-    if (res.data.user.authToken) {
-      localStorage.setItem("authToken", res.data.user.authToken);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      props.authUser();
-    }
+    // if (res.data.user.authToken) {
+    //   localStorage.setItem("authToken", res.data.user.authToken);
+
+    //   props.authUser();
+    // }
   };
 
   return 1 ? (
     <div>
-      Become a member
+      {props.notice}
       <p>
         {/* {errors.map((item) => {
             return item.type;
@@ -74,6 +84,9 @@ export const SignupUI = (props) => {
           ref={emailRef as LegacyRef<HTMLInputElement> | undefined}
           name="email"
           placeholder="email"
+          defaultValue={
+            process.env.NODE_ENV != "production" ? "test@user.com" : ""
+          }
           onKeyDown={inputKeyDown}
         />
         {errors.some((item) => item.type == "email") ? (
@@ -88,6 +101,7 @@ export const SignupUI = (props) => {
           ref={usernameRef as LegacyRef<HTMLInputElement> | undefined}
           name="username"
           placeholder="username"
+          defaultValue={process.env.NODE_ENV != "production" ? "testuser" : ""}
           onKeyDown={inputKeyDown}
         />
         {errors.some((item) => item.type == "username") ? (
@@ -99,6 +113,7 @@ export const SignupUI = (props) => {
           onKeyDown={inputKeyDown}
           ref={passwordRef as LegacyRef<HTMLInputElement> | undefined}
           name="password"
+          defaultValue={process.env.NODE_ENV != "production" ? "1234" : ""}
           placeholder="password"
         />
       </p>
@@ -153,7 +168,6 @@ export const LoginUI = (props) => {
       username,
       password,
     });
-    // props.authUser({ username, password });
   };
 
   return props.notice ? (

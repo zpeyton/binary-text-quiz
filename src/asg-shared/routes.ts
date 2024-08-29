@@ -113,6 +113,42 @@ class Login {
   }
 }
 
+class Signup {
+  async send(ws, creds) {
+    let { username, password } = creds;
+    if (!username || !password) {
+      return console.log("Missing creds");
+    }
+
+    let request = {
+      method: "post",
+      path: "Signup",
+      body: { creds },
+      headers: {},
+    };
+
+    console.debug("[Routes.Signup.send]", ws, creds);
+    await ws.send(request);
+  }
+
+  async receive(props) {
+    let { status, message } = props.response;
+    let { user } = props.response.data;
+    let { setUser, setLoginNotice, setSignupNotice, setErrors } =
+      props.ws.state;
+
+    if (status == "fail") {
+      setSignupNotice("Signup Failed - Try again");
+      setErrors([{ type: "general", message }]);
+      return;
+    }
+
+    localStorage.setItem("authToken", user.auth_token);
+    setLoginNotice("");
+    setUser(user);
+  }
+}
+
 class Auth {
   async send(ws) {
     let authToken = localStorage.getItem("authToken");
@@ -159,4 +195,5 @@ export class Routes {
   Chat = new Chat();
   Video = new VideoRoute();
   Login = new Login();
+  Signup = new Signup();
 }

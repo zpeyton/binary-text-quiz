@@ -1,10 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { loginAPI, tokenAPI } from "../asg-shared/api";
 import { WHEP, WHIP } from "../asg-shared/webrtc";
 import { Video } from "../asg-shared/video";
 import { LoginUI, SignupUI } from "../asg-shared/auth";
 import { WebSocketChat } from "../asg-shared/websocket-chat";
-
 import WS from "../asg-shared/websocket/websocket";
 import { Routes } from "../asg-shared/routes";
 
@@ -25,7 +23,7 @@ export const App = () => {
   let [user, setUser] = useState<any>({});
   let [video, setVideo] = useState(false);
   let [loginNotice, setLoginNotice] = useState<any>("");
-  let [signupNotice, setSignupNotice] = useState<any>("");
+  let [signupNotice, setSignupNotice] = useState<any>("Become a member");
   let videoRef = useRef<HTMLVideoElement>();
   let chatRef = useRef<any>();
 
@@ -81,72 +79,11 @@ export const App = () => {
     };
 
     webSocket.current = new WS(webSocketConfig);
-  };
 
-  let authUser = async (creds?) => {
-    // console.log("authUser");
-    let auth_token = localStorage.getItem("authToken");
-    let user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (auth_token) {
-      // is token valid
-      let validateToken = await tokenAPI({ auth_token });
-      if (validateToken.status == "fail") {
-        // console.log("authUser token check failed");
-        setLoginNotice("Login Required - Token Expired");
-        setUser({});
-        await cleanupStreamClient();
-        localStorage.setItem("authToken", "");
-        return;
-      }
-      if (loginNotice) {
-        setLoginNotice("");
-      }
-      localStorage.setItem("user", JSON.stringify(validateToken.data.user));
-      // console.log("[WS][authToken] Valid setUser");
-      setUser(validateToken.data.user);
-
-      return;
-    }
-
-    if (!creds) {
-      // console.log("Login");
-      setLoginNotice("Login");
-      setUser({});
-      await cleanupStreamClient();
-      return;
-    }
-
-    let { username, password } = creds;
-    if (!username || !password) {
-      setUser({});
-      setLoginNotice("Login");
-      return console.log("Missing creds");
-    }
-
-    let res = await loginAPI(creds);
-
-    if (res.status == "fail") {
-      setLoginNotice("Login Failed - Try again");
-      return;
-    }
-
-    if (res.data.user) {
-      localStorage.setItem("authToken", res.data.user.auth_token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-    }
-
-    setLoginNotice("");
-    setUser(res.data.user);
-    return true;
-  };
-
-  useEffect(() => {
-    // console.log("[UseEffect] APP");
-
-    initWebSocket();
     webSocket.current.setState({
       setUser,
       setLoginNotice,
+      setSignupNotice,
       cleanupStreamClient,
     });
 
@@ -167,6 +104,11 @@ export const App = () => {
       webSocket.current.ws.close(1000, "Logged Out");
       // console.log("webSocket readyState", webSocket.current.ws.readyState);
     });
+  };
+
+  useEffect(() => {
+    // console.log("[UseEffect] APP");
+    initWebSocket();
   }, []);
 
   useEffect(() => {
@@ -205,7 +147,6 @@ export const App = () => {
             <>
               <a
                 onClick={() => {
-                  setLoginNotice("Login");
                   setLoginNotice("Login");
                 }}
                 className="login"

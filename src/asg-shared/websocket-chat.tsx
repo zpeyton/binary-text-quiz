@@ -6,12 +6,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { getChatsAPI, sendChatAPI } from "./api";
 import * as Icons from "../asg-shared/icons";
 import { TipUI } from "./tips";
-import { TimerEl } from "./timer";
-
-import Chat from "../asg-shared/websocket/chat";
 import { Routes } from "./routes";
 
 export const WebSocketChat = forwardRef((props: any, ref) => {

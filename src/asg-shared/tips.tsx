@@ -185,6 +185,7 @@ export const AddFundsUI = (props) => {
     if (btnAddMoney.current) {
       //btnAddMoney.current.click();
     }
+    inputAmountRef.current?.focus();
   }, []);
 
   const addMoney = async () => {
@@ -197,21 +198,23 @@ export const AddFundsUI = (props) => {
       return;
     }
 
-    let res = await addFundsAPI({ amount });
+    setUpdateCreditCard(true);
+    setErrors([{}]);
+    //let res = await addFundsAPI({ amount });
 
-    if (res.status == "fail") {
-      console.log("Add money failed");
+    // if (res.status == "fail") {
+    //   console.log("Add money failed");
 
-      if (res.message == "Credit card failed") {
-        setUpdateCreditCard(true);
-        return;
-      }
-      setErrors([res]);
-      return;
-    }
+    //   if (res.message == "Credit card failed") {
+    //     setUpdateCreditCard(true);
+    //     return;
+    //   }
+    //   setErrors([res]);
+    //   return;
+    // }
 
-    console.log("Add funds success");
-    setErrors([]);
+    // console.log("Add funds success");
+    // setErrors([]);
     // TODO: if they have a payment method
     // we can reset the amount here props.resetTips();
 
@@ -289,6 +292,12 @@ export const TipUI = (props) => {
   const sendTip = async () => {
     console.debug("Send Tip!");
     // chatRef.current.get();
+    let authToken = localStorage.getItem("authToken");
+    if (!authToken) {
+      alert("Login or Sign up to tip.");
+      return;
+    }
+
     if (!props.user.balance) {
       setNoMoney(true);
       setErrors([{}]);
