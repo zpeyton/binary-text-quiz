@@ -43,18 +43,29 @@ export class WHIP {
       }
     });
 
-    console.debug("[WHIP.init]");
+    let constraints = {
+      video: {
+        width: 1280,
+        height: 720,
+        // frameRate: { min: 20, ideal: 24, max: 24 },
+      },
+      audio: true,
+    };
+
+    console.debug("[WHIP.init]", constraints);
 
     this.client
-      .accessLocalMediaSources()
+      .accessLocalMediaSources(constraints)
       .then((stream) => {
         this.client.localStream = stream;
+        console.debug("[WHIP.init] stream", stream);
+
         this.videoRef.current.srcObject = stream;
-        this.recorder = new MediaRecorder(stream, {
-          mimeType: "video/mp4",
-        });
-        this.recorder.start();
-        console.log("[WHIP] Recorder state", this.recorder.state);
+        // this.recorder = new MediaRecorder(stream, {
+        //   mimeType: "video/mp4",
+        // });
+        // this.recorder.start();
+        // console.log("[WHIP] Recorder state", this.recorder.state);
       })
       .catch(console.error);
 

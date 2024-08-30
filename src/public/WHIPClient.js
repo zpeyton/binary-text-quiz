@@ -6,7 +6,7 @@ import negotiateConnectionWithClientOffer from "./negotiateConnectionWithClientO
  * https://www.ietf.org/archive/id/draft-ietf-wish-whip-01.html
  */
 export default class WHIPClient {
-  constructor(endpoint, videoElement) {
+  constructor(endpoint, videoElement, test) {
     this.endpoint = endpoint;
     this.videoElement = videoElement;
     this.device;
@@ -29,27 +29,38 @@ export default class WHIPClient {
      * https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/negotiationneeded_event
      * https://www.ietf.org/archive/id/draft-ietf-wish-whip-01.html
      */
-    // this.peerConnection.addEventListener("negotiationneeded", async (ev) => {
-    //   console.log(
-    //     "[WHIPClient] Connection negotiation starting",
-    //     this.endpoint
-    //   );
-    //   await negotiateConnectionWithClientOffer(
-    //     this.peerConnection,
-    //     this.endpoint
-    //   );
-    //   console.log("[WHIPClient] Connection negotiation ended");
-    // });
-    /**
-     * While the connection is being initialized,
-     * connect the video stream to the provided <video> element.
-     */
-    // this.accessLocalMediaSources()
-    //   .then((stream) => {
-    //     this.localStream = stream;
-    //     videoElement.srcObject = stream;
-    //   })
-    //   .catch(console.error);
+    if (test) {
+      this.peerConnection.addEventListener("negotiationneeded", async (ev) => {
+        console.log(
+          "[WHIPClient] Connection negotiation starting",
+          this.endpoint
+        );
+        await negotiateConnectionWithClientOffer(
+          this.peerConnection,
+          this.endpoint
+        );
+        console.log("[WHIPClient] Connection negotiation ended");
+      });
+      /**
+       * While the connection is being initialized,
+       * connect the video stream to the provided <video> element.
+       */
+      let constraints = {
+        video: {
+          width: 1280,
+          height: 720,
+          frameRate: { min: 20, ideal: 24, max: 24 },
+        },
+        audio: true,
+      };
+
+      this.accessLocalMediaSources(constraints)
+        .then((stream) => {
+          this.localStream = stream;
+          videoElement.srcObject = stream;
+        })
+        .catch(console.error);
+    }
   }
 
   /**
@@ -146,27 +157,35 @@ export default class WHIPClient {
    * https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
    */
 
-  async accessLocalMediaSources() {
-    return navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((stream) => {
-        stream.getTracks().forEach((track) => {
-          // console.log(track.label);
-          const transceiver = this.peerConnection.addTransceiver(track, {
-            /** WHIP is only for sending streaming media */
-            direction: "sendonly",
-          });
-
-          if (track.kind == "video" && transceiver.sender.track) {
-            this.device = track.label;
-            transceiver.sender.track.applyConstraints({
-              width: 1280,
-              height: 720,
-            });
-          }
+  async accessLocalMediaSources(constraints) {
+    return navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+      stream.getTracks().forEach((track) => {
+        // console.log(track.label);
+        const transceiver = this.peerConnection.addTransceiver(track, {
+          /** WHIP is only for sending streaming media */
+          direction: "sendonly",
         });
-        return stream;
+
+        if (track.kind == "video" && transceiver.sender.track) {
+          this.device = track.label;
+          let params = transceiver.sender.getParameters();
+          // params.encodings[0].maxBitrate = 500000;
+          // params.encodings[0].maxFramerate = 24;
+          transceiver.sender.setParameters(params);
+          console.log(
+            "video track settings with params",
+            transceiver.sender.getParameters(),
+            track.getSettings()
+          );
+          transceiver.sender.track.applyConstraints({
+            width: 1280,
+            height: 720,
+            frameRate: { min: 20, ideal: 24, max: 24 },
+          });
+        }
       });
+      return stream;
+    });
   }
   /**
    * Terminate the streaming session

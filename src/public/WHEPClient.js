@@ -5,7 +5,7 @@ import negotiateConnectionWithClientOffer from "./negotiateConnectionWithClientO
  * https://www.ietf.org/id/draft-murillo-whep-00.html
  */
 export default class WHEPClient {
-  constructor(endpoint, videoElement) {
+  constructor(endpoint, videoElement, test) {
     this.endpoint = endpoint;
     this.videoElement = videoElement;
     this.stream = new MediaStream();
@@ -57,6 +57,17 @@ export default class WHEPClient {
           if (streamAlreadyHasVideoTrack) {
             break;
           }
+          console.log("video track settings with contraints", track);
+          // track.applyConstraints({
+          //   frameRate: { min: 20, ideal: 22, max: 24 },
+          // });
+          console.log(
+            "video track settings content hint motion!",
+
+            track.getSettings(),
+            track.getConstraints()
+          );
+          track.contentHint = "motion";
           this.stream.addTrack(track);
           break;
         case "audio":
@@ -69,23 +80,26 @@ export default class WHEPClient {
           console.log("got unknown track " + track);
       }
     };
-    //this.peerConnection.addEventListener("connectionstatechange", (ev) => {
-    //if (this.peerConnection.connectionState !== "connected") {
-    //     // console.log("connectionState", this.peerConnection.connectionState);
-    //     if (this.peerConnection.connectionState == "disconnected") {
-    //       localStorage.setItem("videoState", "disconnected");
-    //     }
-    //     return;
-    //   }
-    //   if (!this.videoElement.srcObject) {
-    //     this.videoElement.srcObject = this.stream;
-    //   }
-    //});
-    this.negotiate = negotiateConnectionWithClientOffer;
 
-    // this.peerConnection.addEventListener("negotiationneeded", (ev) => {
-    //   console.debug("[WHEPCLient] negotiationneeded");
-    //   this.negotiate(this.peerConnection, this.endpoint);
-    // });
+    if (test) {
+      this.peerConnection.addEventListener("connectionstatechange", (ev) => {
+        if (this.peerConnection.connectionState !== "connected") {
+          // console.log("connectionState", this.peerConnection.connectionState);
+          if (this.peerConnection.connectionState == "disconnected") {
+            localStorage.setItem("videoState", "disconnected");
+          }
+          return;
+        }
+        if (!this.videoElement.srcObject) {
+          this.videoElement.srcObject = this.stream;
+        }
+      });
+      this.negotiate = negotiateConnectionWithClientOffer;
+
+      this.peerConnection.addEventListener("negotiationneeded", (ev) => {
+        console.debug("[WHEPCLient] negotiationneeded");
+        this.negotiate(this.peerConnection, this.endpoint);
+      });
+    }
   }
 }

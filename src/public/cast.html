@@ -7,10 +7,18 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
+    <style>
+      video {
+        width: 100vw;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
   </head>
   <body>
-    <h4>Broadcasting video using WHIP</h4>
-    <video id="input-video" autoplay muted></video>
+    <video id="video" autoplay muted playsinline></video>
 
     <script type="module">
       import WHIPClient from "./WHIPClient.js";
@@ -18,9 +26,9 @@
       //"https://customer-aria4pdgkvgu9z0v.cloudflarestream.com/5e75ff21fe8c2da7b57eef05665ab9a3k341f971987242898666f88c9bdd75cad/webRTC/publish";
       let url =
         "https://customer-aria4pdgkvgu9z0v.cloudflarestream.com/c29c3af7da2b64a561ccffac37aedbeek0dbe52278517838e32dbff6f59cc3e82/webRTC/publish";
-      const videoElement = document.getElementById("input-video");
+      const videoElement = document.getElementById("video");
 
-      self.client = new WHIPClient(url, videoElement);
+      self.client = new WHIPClient(url, videoElement, true);
     </script>
   </body>
 </html>

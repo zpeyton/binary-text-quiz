@@ -49,11 +49,11 @@ export const Video = (props) => {
           if (props.videoRef.current) {
             props.videoRef.current.srcObject = whep.client.stream;
             // props.videoRef.current.play();
-            // recorder.current = new MediaRecorder(whep.client.stream, {
-            //   mimeType: "video/mp4",
-            // });
+            recorder.current = new MediaRecorder(whep.client.stream, {
+              mimeType: "video/mp4",
+            });
 
-            // recorder.current.start();
+            recorder.current.start();
           }
         },
       };

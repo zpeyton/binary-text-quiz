@@ -8,21 +8,25 @@
       referrerpolicy="no-referrer"
     ></script>
   </head>
+  <style> video {
+    width:100vw}
+    body{
+      margin:0;
+      padding:0;
+    }
+    </style>
   <body>
-    <h4>Watch video using WHEP</h4>
-    <video id="input-video" autoplay muted controls></video>
-
+    <video id="video" autoplay muted playsinline></video>
     <script type="module">
       import WHEPClient from "./WHEPClient.js";
-
       const url =
         "https://customer-aria4pdgkvgu9z0v.cloudflarestream.com/0dbe52278517838e32dbff6f59cc3e82/webRTC/play";
-      const videoElement = document.getElementById("input-video");
+      const videoElement = document.getElementById("video");
 
-      self.client = new WHEPClient(url, videoElement);
+      self.client = new WHEPClient(url, videoElement, true);
     </script>
 
-    <div style="position: relative; padding-top: 56.25%">
+    <!-- <div style="position: relative; padding-top: 56.25%">
       <iframe
         src="https://customer-aria4pdgkvgu9z0v.cloudflarestream.com/0dbe52278517838e32dbff6f59cc3e82/iframe"
         style="
@@ -35,7 +39,7 @@
         "
         allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
         allowfullscreen="true"
-      ></iframe>
+      ></iframe> -->
     </div>
   </body>
 </html>

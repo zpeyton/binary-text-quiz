@@ -103,9 +103,9 @@ async function postSDPOffer(endpoint, data) {
 async function waitToCompleteICEGathering(peerConnection) {
   return new Promise((resolve) => {
     /** Wait at most 1 second for ICE gathering. */
-    setTimeout(function () {
-      resolve(peerConnection.localDescription);
-    }, 1000);
+    // setTimeout(function () {
+    //   resolve(peerConnection.localDescription);
+    // }, 800);
     peerConnection.onicegatheringstatechange = (ev) =>
       // console.log(
       //   "onicegatheringstatechange",
