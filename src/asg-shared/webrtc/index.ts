@@ -153,7 +153,7 @@ export class WHEP {
     this.client.peerConnection.addEventListener(changeEvent, async () => {
       let { connectionState: state } = peerConnection;
 
-      console.debug("[WHEPClient.peerConnection] state", state);
+      console.debug("[WHEPClient.peerConnection][Video] state", state);
 
       if (config[state]) {
         config[state](this);
@@ -163,7 +163,7 @@ export class WHEP {
     this.client.peerConnection.addEventListener(
       "negotiationneeded",
       async () => {
-        console.log("[WHEP.init]", "negotiationneeded");
+        console.log("[WHEP.init][Video]", "negotiationneeded");
         const offer = await this.client.peerConnection.createOffer();
         await this.client.peerConnection.setLocalDescription(offer);
       }
@@ -179,7 +179,7 @@ export class WHEP {
   async connect() {
     let { peerConnection } = this.client;
 
-    console.log("[WHEP.connect]");
+    console.log("[WHEP.connect][Video]");
 
     let response = await fetch(this.play, {
       method: "POST",
@@ -194,7 +194,7 @@ export class WHEP {
       return;
     }
 
-    console.log("[WHEP.connect]", "OK");
+    console.log("[WHEP.connect][Video]", "OK");
 
     await peerConnection.setRemoteDescription(
       new RTCSessionDescription({ type: "answer", sdp: answerSDP })

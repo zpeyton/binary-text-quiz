@@ -1,11 +1,18 @@
+class APIRoute {
+  webSocket;
+  receive;
+  send;
+  constructor(webSocket) {
+    this.webSocket = webSocket;
+  }
+}
+
 class Chat {
   async send(ws, message) {
-    let authToken = localStorage.getItem("authToken");
     let request = {
       method: "post",
       path: "Chat",
       body: { message },
-      headers: { Authorization: authToken },
     };
 
     await ws.send(request);
@@ -28,10 +35,12 @@ class Chat {
   }
 }
 
-class User {
-  async receive(props) {
-    console.debug("[Route.User]", props);
-    let { response } = props;
+class User extends APIRoute {
+  receive = async (props) => {
+    let { data: response } = props.response;
+    let { joined, quit } = response;
+
+    console.debug("[Route.User]", response);
 
     await new Promise((r) => {
       let wait = setInterval(() => {
@@ -43,32 +52,30 @@ class User {
       }, 100);
     });
 
-    let { joined, quit } = response.data;
     let { current: chat } = props.ws.state.chatRef;
 
     if (joined) {
-      chat.newMembers(response.data);
+      chat.newMembers(response);
     }
 
     if (quit) {
-      chat.removeMembers(response.data);
+      chat.removeMembers(response);
     }
-  }
+  };
 }
 
-class VideoRoute {
-  async send(ws, message) {
-    let authToken = localStorage.getItem("authToken");
+class VideoRoute extends APIRoute {
+  send = async (body) => {
+    console.log("[API.Video]", this);
     let request = {
       method: "post",
       path: "Video",
-      body: message,
-      headers: { Authorization: authToken },
+      body,
     };
-    await ws.send(request);
-  }
+    await this.webSocket.send(request);
+  };
 
-  async receive(props) {
+  receive = async (props) => {
     let { live } = props.response.data;
     let { user } = props.ws.state;
 
@@ -77,7 +84,7 @@ class VideoRoute {
         window.location.reload();
       }, 5000);
     }
-  }
+  };
 }
 
 class Login {
@@ -149,55 +156,42 @@ class Signup {
   }
 }
 
-class Auth {
-  async send(ws) {
-    let authToken = localStorage.getItem("authToken");
-    // do we auth here even if there
-    // is no auth token?
-    // if(!authToken){
-    //     return;
-    // }
+class Auth extends APIRoute {
+  send = async (props) => {
+    console.log("[API.Auth]", this);
     let request = {
       method: "post",
       path: "Auth",
-      headers: { Authorization: authToken },
     };
 
-    await ws.send(request);
-  }
+    await this.webSocket.send(request);
+  };
 
-  async receive(props) {
+  receive = async (props) => {
     let { setUser, cleanupStreamClient, setLoginNotice } = props.ws.state;
-    let { status } = props.response;
+    let { status, message } = props.response;
     let { user } = props.response.data;
 
-    // for now we let them in
-    // need to show login button now
-
-    if (status == "fail") {
-      //   setLoginNotice("Login");
-      //   localStorage.removeItem("authToken");
-      //   localStorage.removeItem("user");
-      //   setUser({});
-      //   await cleanupStreamClient();
-      //   return;
+    // for now we let guests in
+    // failed auth tokens get removed
+    if (status == "fail" && message == "No results") {
+      localStorage.removeItem("authToken");
+      window.location.reload();
+      return;
     }
 
     setUser(user);
 
     return;
-  }
+  };
 }
 
 class Pay {
   async send(ws, body?) {
-    let authToken = localStorage.getItem("authToken");
-    let headers = { Authorization: authToken };
     if (!body) {
       let request = {
         method: "get",
         path: "Pay",
-        headers,
       };
       await ws.send(request);
       return;
@@ -206,7 +200,6 @@ class Pay {
     let request = {
       method: "post",
       path: "Pay",
-      headers,
       body,
     };
 
@@ -241,50 +234,39 @@ class Pay {
   }
 }
 
-class Tip {
-  async send(ws, body?) {
-    let authToken = localStorage.getItem("authToken");
-    let headers = { Authorization: authToken };
+class Tip extends APIRoute {
+  send = async (amount, handleResponse) => {
+    console.debug("[Route.Tip.send]");
     let request = {
       method: "post",
       path: "Tip",
-      headers,
-      body,
+      body: { amount },
     };
-
-    await ws.send(request);
-  }
-  async receive(props) {
-    let { ws, response } = props;
-    let { setNoMoney, setErrors, setBalance } = ws.state;
-    let { chatRef } = ws.state;
-
-    if (response.status == "fail") {
-      console.log("Send Tip failed");
-      if (response.message == "No money") {
-        setNoMoney(true);
-        chatRef.current.toggleTwoevencols();
-      }
-
-      setErrors([response]);
-      return;
-    }
-
-    if (response.status == "OK") {
-      let { newBalance } = response.data;
-      setBalance(newBalance);
-      return;
-    }
-  }
+    console.debug("[Route.Tip.send]", this.webSocket);
+    await this.webSocket.send(request);
+    this.receive = handleResponse;
+  };
 }
 
 export class Routes {
-  Auth = new Auth();
-  User = new User();
-  Chat = new Chat();
-  Video = new VideoRoute();
-  Login = new Login();
-  Signup = new Signup();
-  Pay = new Pay();
-  Tip = new Tip();
+  webSocket;
+  Auth;
+  User;
+  Chat;
+  Video;
+  Login;
+  Signup;
+  Pay;
+  Tip;
+  constructor(webSocket?) {
+    this.webSocket = webSocket;
+    this.Auth = new Auth(webSocket);
+    this.User = new User(webSocket);
+    this.Chat = new Chat();
+    this.Video = new VideoRoute(webSocket);
+    this.Login = new Login();
+    this.Signup = new Signup();
+    this.Pay = new Pay();
+    this.Tip = new Tip(webSocket);
+  }
 }

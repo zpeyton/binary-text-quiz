@@ -53,24 +53,6 @@ export const SignupUI = (props) => {
       username,
       password,
     });
-
-    //props.signup();
-
-    // let res = await signupAPI({ email, username, password });
-
-    // if (res.status == "fail") {
-    //   console.log("Sign up fail");
-    //   // setSignupNotice(res.message);
-    //   setErrors([{ type: "general", message: res.message }]);
-    //   return;
-    // }
-
-    // after sign up we should return an auth_token so we can auth
-    // if (res.data.user.authToken) {
-    //   localStorage.setItem("authToken", res.data.user.authToken);
-
-    //   props.authUser();
-    // }
   };
 
   return 1 ? (

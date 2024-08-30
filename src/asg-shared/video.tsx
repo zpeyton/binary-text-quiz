@@ -1,12 +1,4 @@
-import React, {
-  forwardRef,
-  LegacyRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
-import { WHEP, WHIP } from "./webrtc";
+import React, { useEffect, useRef, useState } from "react";
 
 import { Routes } from "./routes";
 
@@ -15,7 +7,7 @@ export const Video = (props) => {
   let recorder = useRef<any>();
 
   useEffect(() => {
-    // console.debug("[Video]", "[useEffect]", "no deps");
+    console.debug("[Video]", "[useEffect]", "no deps");
 
     //props.setVideo(true);
 
@@ -34,8 +26,9 @@ export const Video = (props) => {
         connected: (whip) => {
           console.debug("[Whip] connected");
           props.setVideo(true);
-          //props.webSocket.current.send({ live: true });
-          new Routes().Video.send(props.webSocket.current, { live: true });
+          let { api } = props.webSocket.current;
+          api.Video.send({ live: true });
+          // new Routes().Video.send(props.webSocket.current, { live: true });
         },
       };
 
@@ -52,14 +45,15 @@ export const Video = (props) => {
         },
         connected: (whep) => {
           props.setVideo(true);
+          // console.log(whep.client.stream);
           if (props.videoRef.current) {
             props.videoRef.current.srcObject = whep.client.stream;
-            props.videoRef.current.play();
-            recorder.current = new MediaRecorder(whep.client.stream, {
-              mimeType: "video/mp4",
-            });
+            // props.videoRef.current.play();
+            // recorder.current = new MediaRecorder(whep.client.stream, {
+            //   mimeType: "video/mp4",
+            // });
 
-            recorder.current.start();
+            // recorder.current.start();
           }
         },
       };
@@ -89,12 +83,12 @@ export const Video = (props) => {
       setVideoLink(a());
     };
   };
-  // console.debug("[Video] render", props);
+  console.debug("[Video] render", props);
 
   return (
     <>
       <video
-        ref={props.videoRef as LegacyRef<HTMLVideoElement> | undefined}
+        ref={props.videoRef as any}
         id="watch"
         autoPlay={true}
         // controls={true}

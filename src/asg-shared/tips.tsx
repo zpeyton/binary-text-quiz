@@ -280,7 +280,7 @@ export const TipUI = (props) => {
     event.currentTarget.value = amount;
 
     if (event.keyCode == 13) {
-      sendTip();
+      validateTip();
     }
   };
 
@@ -294,9 +294,9 @@ export const TipUI = (props) => {
     }
   }, []);
 
-  const sendTip = async () => {
-    console.debug("Send Tip!");
-    // chatRef.current.get();
+  const validateTip = async () => {
+    console.debug("Validate Tip");
+
     let authToken = localStorage.getItem("authToken");
     if (!authToken) {
       alert("Login or Sign up to tip.");
@@ -309,12 +309,13 @@ export const TipUI = (props) => {
       props.chatRef.current.toggleTwoevencols();
       return;
     }
+
     if (!inputAmountRef.current) {
       console.log("No inputAmountRef");
       return;
     }
 
-    let amount = parseInt(inputAmountRef.current?.value);
+    let amount = parseInt(inputAmountRef.current.value);
 
     if (!amount) {
       console.log("Invalid amount");
@@ -323,32 +324,36 @@ export const TipUI = (props) => {
 
     inputAmountRef.current.value = amount.toString();
 
-    props.webSocket.current.setState({
-      setNoMoney,
-      setErrors,
-      setBalance,
-    });
+    return sendTip(amount);
+  };
 
-    new Routes().Tip.send(props.webSocket.current, { amount });
+  let tipReponse = (props) => {
+    console.log("tipReponse", props);
+    let { ws, response } = props;
+    if (response.status == "fail") {
+      console.log("Send Tip failed");
+      if (response.message == "No money") {
+        setNoMoney(true);
+        props.chatRef.current.toggleTwoevencols();
+      }
 
-    // let res = await sendTipAPI({ amount });
+      setErrors([response]);
+      return;
+    }
 
-    // if (res.status == "fail") {
-    //   console.log("Send Tip failed");
-    //   if (res.message == "No money") {
-    //     setNoMoney(true);
-    //     props.chatRef.current.toggleTwoevencols();
-    //   }
+    if (response.status == "OK") {
+      setBalance(response.data.newBalance);
+      // props.chatRef.current.get();
+      return;
+    }
+  };
 
-    //   setErrors([res]);
-    //   return;
-    // }
+  const sendTip = async (amount) => {
+    console.debug("Send Tip!", props.webSocket);
 
-    // if (res.status == "OK") {
-    //   setBalance(res.data.newBalance);
-    //   // props.chatRef.current.get();
-    //   return;
-    // }
+    let { current: webSocket } = props.webSocket;
+    let tip = webSocket.api.Tip.send;
+    tip(amount, tipReponse);
   };
 
   return (
@@ -366,7 +371,7 @@ export const TipUI = (props) => {
       ) : null}
       {errors.length ? null : (
         <>
-          <a ref={btnSendTip as any} onClick={sendTip}>
+          <a ref={btnSendTip as any} onClick={validateTip}>
             <Icons.dollarSign />
           </a>
           <input

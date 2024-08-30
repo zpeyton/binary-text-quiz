@@ -14,7 +14,7 @@ import {
 } from "../asg-shared";
 
 export const App = (props) => {
-  // console.debug("App render");
+  console.debug("[Video] App render");
   let [host, setHost] = useState<any>(props.host);
   let [user, setUser] = useState<any>({});
   let [video, setVideo] = useState(false);
@@ -38,7 +38,7 @@ export const App = (props) => {
       events: {
         open: async (ws, event) => {
           // console.debug("[WS]", "open", event);
-          new Routes().Auth.send(ws);
+          ws.api.Auth.send(ws);
         },
         message: async (ws, event) => {
           let response = await ws.receive(event.data);
@@ -48,13 +48,15 @@ export const App = (props) => {
             return;
           }
 
-          let handler = new Routes()[response.request.path];
+          let handler = ws.api[response.request.path];
 
           await handler.receive({ ws, response });
         },
         close: async (ws, event) => {
           console.log("[WS]", "close", event);
-          chatRef.current.serverDisconnected();
+          if (chatRef?.current) {
+            chatRef.current.serverDisconnected();
+          }
           await new Promise(async (r) => {
             let interval = setInterval(async (a) => {
               try {
@@ -77,6 +79,11 @@ export const App = (props) => {
 
     webSocket.current = new WS(webSocketConfig);
 
+    let routes = new Routes(webSocket.current);
+
+    let authToken = localStorage.getItem("authToken");
+    webSocket.current.authToken = authToken;
+    webSocket.current.api = routes;
     webSocket.current.setState({
       setUser,
       setLoginNotice,
@@ -113,6 +120,7 @@ export const App = (props) => {
       return;
     }
     console.debug("[UseEffect] User changed", user);
+
     webSocket.current.setState({
       user,
       loginNotice,

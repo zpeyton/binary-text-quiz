@@ -3,6 +3,7 @@ export default class WS {
   request;
   response;
   state = {};
+  authToken;
   constructor(config) {
     if (!config || !config.url) {
       console.log("[WS]", "Missing WS URL");
@@ -26,6 +27,12 @@ export default class WS {
 
   async send(data) {
     console.debug("[WS]", "send", data);
+    if (this.authToken) {
+      data.headers = {
+        ...data.headers,
+        Authorization: this.authToken,
+      };
+    }
     let json = JSON.stringify(data);
     this.ws.send(json);
   }
