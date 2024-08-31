@@ -114,7 +114,7 @@ export class WHIP {
   async connect() {
     let { peerConnection } = this.client;
 
-    console.log("[Whip.connect]"); //peerConnection.localDescription.sdp
+    // console.debug("[Whip.connect]"); //peerConnection.localDescription.sdp
 
     let response = await fetch(this.publish, {
       method: "POST",
@@ -147,10 +147,20 @@ export class WHEP {
   client;
   videoRef;
   ofr;
-
-  init(config) {
+  config;
+  onstatechange;
+  init(config?) {
     console.debug("[WHEP.init]");
+    if (!config) {
+      // this is a reload
+      config = this.config;
+      this.client.peerConnection.removeEventListener(
+        "connectionstatechange",
+        this.onstatechange
+      );
+    }
 
+    this.config = config;
     let { play } = config.user;
     this.videoRef = config.videoRef;
     this.play = play;
@@ -161,7 +171,7 @@ export class WHEP {
 
     let changeEvent = "connectionstatechange";
 
-    this.client.peerConnection.addEventListener(changeEvent, async () => {
+    this.onstatechange = async () => {
       let { connectionState: state } = peerConnection;
 
       console.debug("[WHEPClient.peerConnection][Video] state", state);
@@ -169,7 +179,12 @@ export class WHEP {
       if (config[state]) {
         config[state](this);
       }
-    });
+    };
+
+    this.client.peerConnection.addEventListener(
+      changeEvent,
+      this.onstatechange
+    );
 
     this.client.peerConnection.addEventListener(
       "negotiationneeded",

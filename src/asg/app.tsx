@@ -1,4 +1,3 @@
-import moment from "moment";
 import {
   React,
   useEffect,
@@ -42,57 +41,60 @@ export const App = (props) => {
       return;
     }
 
+    let open = async (ws, event) => {
+      // console.debug("[WS]", "open", event);
+      let reload = await checkBundleUpdate(loadDate);
+      if (reload) {
+        return;
+      }
+      ws.api.Auth.send(ws);
+    };
+
+    let message = async (ws, event) => {
+      // let reload = await checkBundleUpdate(loadDate);
+      // if (reload) {
+      //   return;
+      // }
+
+      let response = await ws.receive(event.data);
+
+      if (!response.request) {
+        console.log("Missing request path");
+        return;
+      }
+
+      let handler = ws.api[response.request.path];
+
+      await handler.receive({ ws, response });
+    };
+
+    let close = async (ws, event) => {
+      console.log("[WS]", "close", event);
+      if (chatRef?.current) {
+        chatRef.current.serverDisconnected();
+      }
+      await new Promise(async (r) => {
+        let interval = setInterval(async (a) => {
+          try {
+            let checkServer = await fetch(`https://${webSocketHost}/`);
+            if (checkServer) {
+              clearInterval(interval);
+              r(true);
+            }
+          } catch (e) {}
+        }, 20000);
+      });
+
+      window.location.reload();
+    };
+
+    let error = (ws, event) => {
+      console.log("[WS]", "error", event);
+    };
+
     let webSocketConfig = {
       url: `wss://${webSocketHost}/`,
-      events: {
-        open: async (ws, event) => {
-          // console.debug("[WS]", "open", event);
-          let reload = await checkBundleUpdate(loadDate);
-          if (reload) {
-            return;
-          }
-          ws.api.Auth.send(ws);
-        },
-        message: async (ws, event) => {
-          let reload = await checkBundleUpdate(loadDate);
-          if (reload) {
-            return;
-          }
-
-          let response = await ws.receive(event.data);
-
-          if (!response.request) {
-            console.log("Missing request path");
-            return;
-          }
-
-          let handler = ws.api[response.request.path];
-
-          await handler.receive({ ws, response });
-        },
-        close: async (ws, event) => {
-          console.log("[WS]", "close", event);
-          if (chatRef?.current) {
-            chatRef.current.serverDisconnected();
-          }
-          await new Promise(async (r) => {
-            let interval = setInterval(async (a) => {
-              try {
-                let checkServer = await fetch(`https://${webSocketHost}/`);
-                if (checkServer) {
-                  clearInterval(interval);
-                  r(true);
-                }
-              } catch (e) {}
-            }, 20000);
-          });
-
-          window.location.reload();
-        },
-        error: (ws, event) => {
-          console.log("[WS]", "error", event);
-        },
-      },
+      events: { open, message, close, error },
     };
 
     webSocket.current = new WS(webSocketConfig);
@@ -101,12 +103,15 @@ export const App = (props) => {
 
     let authToken = localStorage.getItem("authToken");
     webSocket.current.authToken = authToken;
+
     webSocket.current.api = routes;
+
     webSocket.current.setState({
       setUser,
       setLoginNotice,
       setSignupNotice,
       cleanupStreamClient,
+      whep,
     });
 
     window.addEventListener("pagehide", async function (event) {
@@ -118,7 +123,7 @@ export const App = (props) => {
       // console.log("webSocket readyState", webSocket.current.ws.readyState);
     });
 
-    console.log("[initWebsocket] set window events");
+    console.debug("[initWebsocket] set window events");
     window.addEventListener("focus", async (event) => {
       checkBundleUpdate(loadDate);
     });
@@ -136,7 +141,6 @@ export const App = (props) => {
   useEffect(() => {
     // console.log("[UseEffect] APP");
     initWebSocket();
-    // checkBundleUpdate(loadDate);
   }, []);
 
   useEffect(() => {
@@ -189,6 +193,7 @@ export const App = (props) => {
             whep={whep}
             video={video}
             videoRef={videoRef}
+            chatRef={chatRef}
             setVideo={setVideo}
             webSocket={webSocket}
           />

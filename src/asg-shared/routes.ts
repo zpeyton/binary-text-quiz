@@ -77,12 +77,15 @@ class VideoRoute extends APIRoute {
 
   receive = async (props) => {
     let { live } = props.response.data;
-    let { user } = props.ws.state;
+    let { user, whep } = props.ws.state;
 
     if (live && user.type != "stream") {
+      console.log("got video update");
+
       setTimeout(() => {
-        window.location.reload();
-      }, 5000);
+        whep.init();
+        //window.location.reload();
+      }, 4000);
     }
   };
 }

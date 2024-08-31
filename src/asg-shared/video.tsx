@@ -4,6 +4,8 @@ export const Video = (props) => {
   let [videoLink, setVideoLink] = useState<any>();
   let recorder = useRef<any>();
 
+  let configWhep = () => {};
+
   useEffect(() => {
     console.debug("[Video]", "[useEffect]", "no deps");
 
@@ -37,8 +39,9 @@ export const Video = (props) => {
         user: props.user,
         videoRef: props.videoRef,
         disconnected: () => {
-          // setVideo(false);
-          window.location.reload();
+          props.setVideo(false);
+          //props.chatRef.current.serverDisconnected();
+          //window.location.reload();
         },
         connected: (whep) => {
           props.setVideo(true);
@@ -58,18 +61,20 @@ export const Video = (props) => {
     }
   }, []);
 
-  const saveVideo = () => {
+  const saveVideo = (event) => {
+    event?.preventDefault();
     console.debug("[Video] saveVideo");
     let { current: videoRecorder } = recorder;
 
     videoRecorder.stop();
 
     videoRecorder.ondataavailable = (e) => {
-      console.log("REcorder.ondataavailable");
+      console.log("Recorder.ondataavailable");
       let a = () => {
         let url = ["video_", (new Date() + "").slice(4, 28), ".mp4"].join("");
         let href = URL.createObjectURL(e.data);
         console.log("REcorder.ondataavailable a", url, href);
+        videoRecorder.start();
         return (
           <a download={url} href={href}>
             {url}
@@ -95,7 +100,10 @@ export const Video = (props) => {
       ></video>
       {props.user.username == "testuser" ? (
         <>
-          <a onClick={saveVideo}>Record Stop</a> Link: {videoLink}
+          <a onClick={saveVideo} href="#">
+            Record Stop
+          </a>{" "}
+          Link: {videoLink}
         </>
       ) : null}
       {props.video ? null : (

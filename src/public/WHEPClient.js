@@ -57,16 +57,16 @@ export default class WHEPClient {
           if (streamAlreadyHasVideoTrack) {
             break;
           }
-          console.log("video track settings with contraints", track);
+          // console.log("video track settings with contraints", track);
           // track.applyConstraints({
           //   frameRate: { min: 20, ideal: 22, max: 24 },
           // });
-          console.log(
-            "video track settings content hint motion!",
+          // console.log(
+          //   "video track settings content hint motion!",
 
-            track.getSettings(),
-            track.getConstraints()
-          );
+          //   track.getSettings(),
+          //   track.getConstraints()
+          // );
           track.contentHint = "motion";
           this.stream.addTrack(track);
           break;
@@ -82,18 +82,20 @@ export default class WHEPClient {
     };
 
     if (test) {
-      this.peerConnection.addEventListener("connectionstatechange", (ev) => {
-        if (this.peerConnection.connectionState !== "connected") {
-          // console.log("connectionState", this.peerConnection.connectionState);
-          if (this.peerConnection.connectionState == "disconnected") {
-            localStorage.setItem("videoState", "disconnected");
+      this.peerConnection
+        .removeEventListener()
+        .addEventListener("connectionstatechange", (ev) => {
+          if (this.peerConnection.connectionState !== "connected") {
+            // console.log("connectionState", this.peerConnection.connectionState);
+            if (this.peerConnection.connectionState == "disconnected") {
+              localStorage.setItem("videoState", "disconnected");
+            }
+            return;
           }
-          return;
-        }
-        if (!this.videoElement.srcObject) {
-          this.videoElement.srcObject = this.stream;
-        }
-      });
+          if (!this.videoElement.srcObject) {
+            this.videoElement.srcObject = this.stream;
+          }
+        });
       this.negotiate = negotiateConnectionWithClientOffer;
 
       this.peerConnection.addEventListener("negotiationneeded", (ev) => {
