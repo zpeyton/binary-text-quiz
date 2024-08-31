@@ -5,6 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
+import moment from "moment";
 import { LoginUI, SignupUI } from "./auth";
 import { Video } from "../asg-shared/video";
 import * as Icons from "./icons";
@@ -29,11 +30,47 @@ const whep = new WHEP();
 let dev = process.env.STRIPE_PUBLISHABLE_KEY_DEV;
 let prod = process.env.STRIPE_PUBLISHABLE_KEY_PROD;
 
-let PROD = process.env.NODE_ENV == "production";
+let PRODUCTION = process.env.NODE_ENV == "production";
 
-const STRIPE_PUBLISHABLE_KEY = PROD ? prod : dev;
+const STRIPE_PUBLISHABLE_KEY = PRODUCTION ? prod : dev;
 
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY || "");
+
+const bundleUrl = `${document.location.href}asg.bundle-${process.env.VERSION}.js`;
+
+const fetchLastModified = async (url) => {
+  const res = await fetch(url, { method: "HEAD" });
+  let lastModified = res.headers.get("Last-Modified") || 0;
+  // console.log("lastModifiedHeader", lastModified);
+  return new Date(lastModified);
+};
+
+const shouldUpdate = async (url, loadDate) => {
+  let lastModified = await fetchLastModified(url);
+  let momentLM = moment(lastModified);
+  let shouldUpdate = momentLM.isSameOrAfter(loadDate);
+  if (shouldUpdate) {
+    console.log("shouldUpdate", shouldUpdate);
+    return true;
+  }
+
+  return false;
+};
+
+const reloadNoCache = () => {
+  // @ts-ignore this depricated but works still
+  // who knows why it is depricated because caches doesn't work
+  window.location.reload(true);
+};
+
+const checkBundleUpdate = async (loadDate) => {
+  let updateBundle = await shouldUpdate(bundleUrl, loadDate);
+  if (updateBundle) {
+    reloadNoCache();
+    return true;
+  }
+  return false;
+};
 
 export {
   React,
@@ -57,4 +94,9 @@ export {
   useElements,
   useStripe,
   StripeElements,
+  PRODUCTION,
+  shouldUpdate,
+  bundleUrl,
+  reloadNoCache,
+  checkBundleUpdate,
 };

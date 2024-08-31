@@ -50,6 +50,7 @@ var asgConfig = Object.assign({}, commonConfig, {
       STRIPE_PUBLISHABLE_KEY_PROD: process.env.STRIPE_PUBLISHABLE_KEY_PROD,
       STRIPE_PUBLISHABLE_KEY_PROD: process.env.STRIPE_PUBLISHABLE_KEY_PROD,
       VIDEO_ENABLED: process.env.VIDEO_ENABLED,
+      VERSION: webpackMajorVersion,
     }),
     // process.env.NODE_ENV === "production" ? new BomPlugin(true) : false,
   ],
@@ -87,7 +88,7 @@ var quizConfig = Object.assign({}, commonConfig, {
   ],
 
   output: {
-    filename: "quiz.bundle-" + webpackMajorVersion + ".js",
+    filename: "quiz.bundle-[contenthash].js",
     path: path.resolve(__dirname, "build/quiz"),
     clean: true,
   },

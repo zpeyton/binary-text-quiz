@@ -174,7 +174,7 @@ export class WHEP {
     this.client.peerConnection.addEventListener(
       "negotiationneeded",
       async () => {
-        console.log("[WHEP.init][Video]", "negotiationneeded");
+        console.debug("[WHEP.init][Video]", "negotiationneeded");
         const offer = await this.client.peerConnection.createOffer();
         await this.client.peerConnection.setLocalDescription(offer);
       }
@@ -190,7 +190,7 @@ export class WHEP {
   async connect() {
     let { peerConnection } = this.client;
 
-    console.log("[WHEP.connect][Video]");
+    console.debug("[WHEP.connect][Video]");
 
     let response = await fetch(this.play, {
       method: "POST",
@@ -201,7 +201,7 @@ export class WHEP {
 
     let answerSDP = await response.text();
     if (response.status == 400) {
-      console.log("[WHEP.connect]", 400);
+      console.debug("[WHEP.connect]", 400);
       return;
     }
 

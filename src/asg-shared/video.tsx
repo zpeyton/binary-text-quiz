@@ -1,7 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 
-import { Routes } from "./routes";
-
 export const Video = (props) => {
   let [videoLink, setVideoLink] = useState<any>();
   let recorder = useRef<any>();
@@ -28,13 +26,12 @@ export const Video = (props) => {
           props.setVideo(true);
           let { api } = props.webSocket.current;
           api.Video.send({ live: true });
-          // new Routes().Video.send(props.webSocket.current, { live: true });
         },
       };
 
       props.whip.init(whipConfig);
 
-      // done with Whip
+      // done with Whip!
     } else {
       let whepConfig = {
         user: props.user,

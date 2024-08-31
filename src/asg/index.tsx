@@ -4,6 +4,9 @@ import { App } from "./app";
 import "./styles.css";
 
 let PROD = process.env.NODE_ENV == "production";
-let host = PROD ? "asg-live.zapteck.workers.dev" : "localhost:9000";
+let webSocketHost = PROD ? "asg-live.zapteck.workers.dev" : "localhost:9000";
 
-ReactDOM.render(<App host={host} />, document.getElementById("main"));
+ReactDOM.render(
+  <App webSocketHost={webSocketHost} />,
+  document.getElementById("main")
+);

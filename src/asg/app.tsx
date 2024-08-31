@@ -1,3 +1,4 @@
+import moment from "moment";
 import {
   React,
   useEffect,
@@ -11,12 +12,15 @@ import {
   LoginUI,
   SignupUI,
   WebSocketChat,
+  PRODUCTION,
+  checkBundleUpdate,
 } from "../asg-shared";
 
 export const App = (props) => {
   console.debug("[Video] App render");
-  let [host, setHost] = useState<any>(props.host);
+  let [webSocketHost, setWebSocketHost] = useState<any>(props.webSocketHost);
   let [user, setUser] = useState<any>({});
+  let [loadDate, setLoadDate] = useState<any>(new Date());
   let [video, setVideo] = useState(false);
   let [loginNotice, setLoginNotice] = useState<any>("");
   let [signupNotice, setSignupNotice] = useState<any>("Become a member");
@@ -32,15 +36,29 @@ export const App = (props) => {
     }
   };
 
-  let initWebSocket = () => {
+  let initWebSocket = async () => {
+    let reload = await checkBundleUpdate(loadDate);
+    if (reload) {
+      return;
+    }
+
     let webSocketConfig = {
-      url: `wss://${host}/`,
+      url: `wss://${webSocketHost}/`,
       events: {
         open: async (ws, event) => {
           // console.debug("[WS]", "open", event);
+          let reload = await checkBundleUpdate(loadDate);
+          if (reload) {
+            return;
+          }
           ws.api.Auth.send(ws);
         },
         message: async (ws, event) => {
+          let reload = await checkBundleUpdate(loadDate);
+          if (reload) {
+            return;
+          }
+
           let response = await ws.receive(event.data);
 
           if (!response.request) {
@@ -60,7 +78,7 @@ export const App = (props) => {
           await new Promise(async (r) => {
             let interval = setInterval(async (a) => {
               try {
-                let checkServer = await fetch(`https://${host}/`);
+                let checkServer = await fetch(`https://${webSocketHost}/`);
                 if (checkServer) {
                   clearInterval(interval);
                   r(true);
@@ -100,11 +118,16 @@ export const App = (props) => {
       // console.log("webSocket readyState", webSocket.current.ws.readyState);
     });
 
+    console.log("[initWebsocket] set window events");
+    window.addEventListener("focus", async (event) => {
+      checkBundleUpdate(loadDate);
+    });
+
     window.addEventListener("unload", function (event) {
       event.stopPropagation();
       event.preventDefault();
 
-      console.log("unload");
+      console.debug("unload");
       webSocket.current.ws.close(1000, "Logged Out");
       // console.log("webSocket readyState", webSocket.current.ws.readyState);
     });
@@ -113,6 +136,7 @@ export const App = (props) => {
   useEffect(() => {
     // console.log("[UseEffect] APP");
     initWebSocket();
+    // checkBundleUpdate(loadDate);
   }, []);
 
   useEffect(() => {

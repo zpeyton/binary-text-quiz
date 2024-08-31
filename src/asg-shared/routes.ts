@@ -158,7 +158,7 @@ class Signup {
 
 class Auth extends APIRoute {
   send = async (props) => {
-    console.log("[API.Auth]", this);
+    // console.log("[API.Auth]", this);
     let request = {
       method: "post",
       path: "Auth",
