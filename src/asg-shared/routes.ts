@@ -1,3 +1,5 @@
+import { logout } from ".";
+
 class APIRoute {
   webSocket;
   receive;
@@ -7,18 +9,18 @@ class APIRoute {
   }
 }
 
-class Chat {
-  async send(ws, message) {
+class Chat extends APIRoute {
+  send = async (message) => {
     let request = {
       method: "post",
       path: "Chat",
       body: { message },
     };
 
-    await ws.send(request);
-  }
+    await this.webSocket.send(request);
+  };
 
-  async receive(props) {
+  receive = async (props) => {
     console.debug("[Route.Chat]", props);
     let { data } = props.response;
 
@@ -32,7 +34,7 @@ class Chat {
     });
 
     props.ws.state.chatRef.current.newChat(data);
-  }
+  };
 }
 
 class User extends APIRoute {
@@ -90,8 +92,8 @@ class VideoRoute extends APIRoute {
   };
 }
 
-class Login {
-  async send(ws, creds) {
+class Login extends APIRoute {
+  send = async (creds) => {
     let { username, password } = creds;
     if (!username || !password) {
       return console.log("Missing creds");
@@ -103,14 +105,16 @@ class Login {
       body: { creds },
       headers: {},
     };
-    console.debug("[Routes.Login.send]", ws, creds);
-    await ws.send(request);
-  }
 
-  async receive(props) {
+    console.debug("[Routes.Login.send]", creds);
+
+    await this.webSocket.send(request);
+  };
+
+  receive = async (props) => {
     let { status } = props.response;
     let { user } = props.response.data;
-    let { setUser, cleanupStreamClient, setLoginNotice } = props.ws.state;
+    let { setUser, setLoginNotice } = props.ws.state;
 
     if (status == "fail") {
       setLoginNotice("Login Failed - Try again");
@@ -120,11 +124,11 @@ class Login {
     localStorage.setItem("authToken", user.auth_token);
     setLoginNotice("");
     setUser(user);
-  }
+  };
 }
 
-class Signup {
-  async send(ws, creds) {
+class Signup extends APIRoute {
+  send = async (creds) => {
     let { username, password } = creds;
     if (!username || !password) {
       return console.log("Missing creds");
@@ -134,14 +138,13 @@ class Signup {
       method: "post",
       path: "Signup",
       body: { creds },
-      headers: {},
     };
 
-    console.debug("[Routes.Signup.send]", ws, creds);
-    await ws.send(request);
-  }
+    console.debug("[Routes.Signup.send]", creds);
+    await this.webSocket.send(request);
+  };
 
-  async receive(props) {
+  receive = async (props) => {
     let { status, message } = props.response;
     let { user } = props.response.data;
     let { setUser, setLoginNotice, setSignupNotice, setErrors } =
@@ -156,7 +159,7 @@ class Signup {
     localStorage.setItem("authToken", user.auth_token);
     setLoginNotice("");
     setUser(user);
-  }
+  };
 }
 
 class Auth extends APIRoute {
@@ -171,15 +174,14 @@ class Auth extends APIRoute {
   };
 
   receive = async (props) => {
-    let { setUser, cleanupStreamClient, setLoginNotice } = props.ws.state;
+    let { setUser } = props.ws.state;
     let { status, message } = props.response;
     let { user } = props.response.data;
 
     // for now we let guests in
     // failed auth tokens get removed
     if (status == "fail" && message == "No results") {
-      localStorage.removeItem("authToken");
-      window.location.reload();
+      logout();
       return;
     }
 
@@ -265,10 +267,10 @@ export class Routes {
     this.webSocket = webSocket;
     this.Auth = new Auth(webSocket);
     this.User = new User(webSocket);
-    this.Chat = new Chat();
+    this.Chat = new Chat(webSocket);
     this.Video = new VideoRoute(webSocket);
-    this.Login = new Login();
-    this.Signup = new Signup();
+    this.Login = new Login(webSocket);
+    this.Signup = new Signup(webSocket);
     this.Pay = new Pay();
     this.Tip = new Tip(webSocket);
   }

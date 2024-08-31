@@ -27,6 +27,7 @@ export const SignupUI = (props) => {
     let username = usernameRef.current.value;
     let password = passwordRef.current.value;
     let errorsList: any = [];
+
     if (!username) {
       setErrors(errorsList.push({ type: "username" }));
     }
@@ -48,7 +49,9 @@ export const SignupUI = (props) => {
 
     webSocket.setState({ setErrors });
 
-    await new Routes().Signup.send(webSocket, {
+    // await new Routes().Signup.send(webSocket);
+
+    webSocket.api.Signup.send({
       email,
       username,
       password,
@@ -133,6 +136,7 @@ export const LoginUI = (props) => {
     let username = usernameRef.current.value;
     let password = passwordRef.current.value;
     let errorsList: any = [];
+
     if (!username) {
       setErrors(errorsList.push({ type: "username" }));
     }
@@ -146,10 +150,10 @@ export const LoginUI = (props) => {
       return;
     }
 
-    await new Routes().Login.send(props.webSocket.current, {
-      username,
-      password,
-    });
+    let { current: webSocket } = props.webSocket;
+    // console.log("[LoginUI] websocket");
+    webSocket.api.Login.send({ username, password });
+    // await new Routes().Login.send(props.webSocket.current, );
   };
 
   return props.notice ? (
@@ -160,7 +164,7 @@ export const LoginUI = (props) => {
             return item.type;
           })} */}
         <input
-          ref={usernameRef as LegacyRef<HTMLInputElement> | undefined}
+          ref={usernameRef as any}
           name="username"
           placeholder="username"
           defaultValue={process.env.NODE_ENV != "production" ? "testuser" : ""}
@@ -173,7 +177,7 @@ export const LoginUI = (props) => {
       <p>
         <input
           onKeyDown={inputKeyDown}
-          ref={passwordRef as LegacyRef<HTMLInputElement> | undefined}
+          ref={passwordRef as any}
           name="password"
           defaultValue={process.env.NODE_ENV != "production" ? "1234" : ""}
           placeholder="password"

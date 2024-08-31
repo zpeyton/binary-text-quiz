@@ -13,6 +13,7 @@ import {
   WebSocketChat,
   PRODUCTION,
   checkBundleUpdate,
+  logout,
 } from "../asg-shared";
 
 export const App = (props) => {
@@ -186,6 +187,34 @@ export const App = (props) => {
               </a>
             </>
           ) : null}
+
+          {user.type == "member" || user.type == "member" ? (
+            <>
+              <a
+                onClick={() => {
+                  logout();
+                }}
+                className="login"
+              >
+                Logout
+              </a>
+            </>
+          ) : (
+            <>
+              {!loginNotice ? (
+                <>
+                  <a
+                    onClick={() => {
+                      setLoginNotice("Login");
+                    }}
+                    className="login"
+                  >
+                    Login / Sign up
+                  </a>
+                </>
+              ) : null}
+            </>
+          )}
 
           <Video
             user={user}

@@ -72,6 +72,11 @@ const checkBundleUpdate = async (loadDate) => {
   return false;
 };
 
+const logout = async () => {
+  localStorage.removeItem("authToken");
+  window.location.reload();
+};
+
 export {
   React,
   useEffect,
@@ -99,4 +104,5 @@ export {
   bundleUrl,
   reloadNoCache,
   checkBundleUpdate,
+  logout,
 };

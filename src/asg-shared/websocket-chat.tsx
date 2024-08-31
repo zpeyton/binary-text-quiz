@@ -130,7 +130,8 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
       inputChat.current.value = "";
       //await sendChatAPI(msg);
       //await get();
-      new Routes().Chat.send(props.webSocket.current, message);
+      props.webSocket.current.api.Chat.send(message);
+      // new Routes().Chat.send(props.webSocket.current, message);
       //props.webSocket.current.send({ message });
     }
   };
