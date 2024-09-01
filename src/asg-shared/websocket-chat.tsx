@@ -5,7 +5,6 @@ import {
   useImperativeHandle,
   useRef,
   useState,
-  Routes,
   Icons,
   TipUI,
 } from "../asg-shared";
@@ -74,6 +73,15 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
 
   useEffect(() => {
     // console.log("[Chat]", "members changed", members);
+    const users = members.map(({ joined }) => joined);
+    // console.log("[useEffect members]", users);
+    const filtered = members.filter(
+      ({ joined }, index) => !users.includes(joined, index + 1)
+    );
+    // console.log("[useEffect members] filtered", filtered);
+    if (filtered.length != members.length) {
+      setMembers(filtered);
+    }
   }, [members]);
 
   useEffect(() => {

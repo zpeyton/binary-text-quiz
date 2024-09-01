@@ -9,7 +9,7 @@ export class WHIP {
   videoRef;
   loaded;
   recorder;
-
+  negotiateTimeout;
   init(config) {
     let { publish } = config.user;
     this.videoRef = config.videoRef;
@@ -104,6 +104,19 @@ export class WHIP {
 
   async waitToCompleteICEGathering() {
     return new Promise((resolve) => {
+      setTimeout(() => {
+        if (this.client.peerConnection.connectionState == "connected") {
+          return;
+        }
+        console.log(
+          "[WHIP] There appears to be a problem communicating with the video server"
+        );
+
+        this.negotiateTimeout = setTimeout(() => {
+          this.negotiate();
+        }, 5000);
+      }, 2000);
+
       this.client.peerConnection.onicegatheringstatechange = (evt) => {
         // console.log("test", evt.target.iceGatheringState);
         evt.target.iceGatheringState === "complete" && resolve("Done");
@@ -115,13 +128,19 @@ export class WHIP {
     let { peerConnection } = this.client;
 
     // console.debug("[Whip.connect]"); //peerConnection.localDescription.sdp
-
-    let response = await fetch(this.publish, {
-      method: "POST",
-      mode: "cors",
-      headers: { "content-type": "application/sdp" },
-      body: peerConnection.localDescription.sdp,
-    });
+    let response;
+    try {
+      response = await fetch(this.publish, {
+        method: "POST",
+        mode: "cors",
+        headers: { "content-type": "application/sdp" },
+        body: peerConnection.localDescription.sdp,
+      });
+    } catch (e) {
+      setTimeout(() => {
+        this.connect();
+      }, 5000);
+    }
 
     let answerSDP = await response.text();
 
@@ -129,7 +148,7 @@ export class WHIP {
       console.log("answerSDP 400", answerSDP);
       return;
     }
-
+    clearTimeout(this.negotiateTimeout);
     await peerConnection.setRemoteDescription(
       new RTCSessionDescription({ type: "answer", sdp: answerSDP })
     );

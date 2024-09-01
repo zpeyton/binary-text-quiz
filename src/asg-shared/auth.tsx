@@ -1,6 +1,5 @@
-import React, { LegacyRef, useEffect, useRef, useState } from "react";
-import { signupAPI } from "./api";
-import { Routes } from "./routes";
+import React, { useEffect, useRef, useState } from "react";
+import { DEFAULT_EMAIL, DEFAULT_PASSWORD, DEFAULT_USERNAME } from ".";
 
 export const SignupUI = (props) => {
   let usernameRef = useRef<HTMLInputElement>();
@@ -13,10 +12,6 @@ export const SignupUI = (props) => {
       signupSubmit();
     }
   };
-
-  // useEffect(() => {
-  //   usernameRef?.current?.focus();
-  // });
 
   let signupSubmit = async () => {
     if (!emailRef.current || !usernameRef.current || !passwordRef.current) {
@@ -49,8 +44,6 @@ export const SignupUI = (props) => {
 
     webSocket.setState({ setErrors });
 
-    // await new Routes().Signup.send(webSocket);
-
     webSocket.api.Signup.send({
       email,
       username,
@@ -66,12 +59,10 @@ export const SignupUI = (props) => {
             return item.type;
           })} */}
         <input
-          ref={emailRef as LegacyRef<HTMLInputElement> | undefined}
+          ref={emailRef as any}
           name="email"
           placeholder="email"
-          defaultValue={
-            process.env.NODE_ENV != "production" ? "test@user.com" : ""
-          }
+          defaultValue={DEFAULT_EMAIL}
           onKeyDown={inputKeyDown}
         />
         {errors.some((item) => item.type == "email") ? (
@@ -83,10 +74,10 @@ export const SignupUI = (props) => {
             return item.type;
           })} */}
         <input
-          ref={usernameRef as LegacyRef<HTMLInputElement> | undefined}
+          ref={usernameRef as any}
           name="username"
           placeholder="username"
-          defaultValue={process.env.NODE_ENV != "production" ? "testuser" : ""}
+          defaultValue={DEFAULT_USERNAME}
           onKeyDown={inputKeyDown}
         />
         {errors.some((item) => item.type == "username") ? (
@@ -96,10 +87,11 @@ export const SignupUI = (props) => {
       <p>
         <input
           onKeyDown={inputKeyDown}
-          ref={passwordRef as LegacyRef<HTMLInputElement> | undefined}
+          ref={passwordRef as any}
           name="password"
-          defaultValue={process.env.NODE_ENV != "production" ? "1234" : ""}
+          defaultValue={DEFAULT_PASSWORD}
           placeholder="password"
+          type="password"
         />
       </p>
       {errors.some((item) => item.type == "password") ? (
@@ -167,7 +159,7 @@ export const LoginUI = (props) => {
           ref={usernameRef as any}
           name="username"
           placeholder="username"
-          defaultValue={process.env.NODE_ENV != "production" ? "testuser" : ""}
+          defaultValue={DEFAULT_USERNAME}
           onKeyDown={inputKeyDown}
         />
         {errors.some((item) => item.type == "username") ? (
@@ -179,7 +171,8 @@ export const LoginUI = (props) => {
           onKeyDown={inputKeyDown}
           ref={passwordRef as any}
           name="password"
-          defaultValue={process.env.NODE_ENV != "production" ? "1234" : ""}
+          type="password"
+          defaultValue={DEFAULT_PASSWORD}
           placeholder="password"
         />
       </p>

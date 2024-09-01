@@ -20,9 +20,10 @@ export const Video = (props) => {
       let whipConfig = {
         user: props.user,
         videoRef: props.videoRef,
-        // disconnected: () => {
-        //   props.setVideo(false);
-        // },
+        disconnected: () => {
+          console.log("[WHIP] Reload after disconnect");
+          window.location.reload();
+        },
         connected: (whip) => {
           console.debug("[Whip] connected");
           props.setVideo(true);
@@ -41,7 +42,7 @@ export const Video = (props) => {
         disconnected: () => {
           props.setVideo(false);
           //props.chatRef.current.serverDisconnected();
-          //window.location.reload();
+          window.location.reload();
         },
         connected: (whep) => {
           props.setVideo(true);

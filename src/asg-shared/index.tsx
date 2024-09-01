@@ -34,6 +34,10 @@ let PRODUCTION = process.env.NODE_ENV == "production";
 
 const STRIPE_PUBLISHABLE_KEY = PRODUCTION ? prod : dev;
 
+const DEFAULT_EMAIL = PRODUCTION ? "" : "test@user.com";
+const DEFAULT_USERNAME = PRODUCTION ? "" : "testuser";
+const DEFAULT_PASSWORD = PRODUCTION ? "" : "1234";
+
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY || "");
 
 const bundleUrl = `${document.location.href}asg.bundle-${process.env.VERSION}.js`;
@@ -105,4 +109,7 @@ export {
   reloadNoCache,
   checkBundleUpdate,
   logout,
+  DEFAULT_EMAIL,
+  DEFAULT_USERNAME,
+  DEFAULT_PASSWORD,
 };

@@ -150,6 +150,9 @@ export const App = (props) => {
     }
     console.debug("[UseEffect] User changed", user);
 
+    let authToken = localStorage.getItem("authToken");
+    webSocket.current.authToken = authToken;
+
     webSocket.current.setState({
       user,
       loginNotice,
@@ -175,25 +178,14 @@ export const App = (props) => {
 
       {user.type ? (
         <>
-          {user.type == "guest" && !loginNotice ? (
+          {user.type == "member" || user.type == "stream" ? (
             <>
               <a
-                onClick={() => {
-                  setLoginNotice("Login");
-                }}
-                className="login"
-              >
-                Login / Sign up
-              </a>
-            </>
-          ) : null}
-
-          {user.type == "member" || user.type == "member" ? (
-            <>
-              <a
-                onClick={() => {
+                onClick={(event) => {
+                  event.preventDefault();
                   logout();
                 }}
+                href="#"
                 className="login"
               >
                 Logout
@@ -204,7 +196,8 @@ export const App = (props) => {
               {!loginNotice ? (
                 <>
                   <a
-                    onClick={() => {
+                    onClick={(event) => {
+                      event.preventDefault();
                       setLoginNotice("Login");
                     }}
                     className="login"

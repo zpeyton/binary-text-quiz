@@ -122,6 +122,7 @@ class Login extends APIRoute {
     }
 
     localStorage.setItem("authToken", user.auth_token);
+    props.ws.authToken = user.auth_token;
     setLoginNotice("");
     setUser(user);
   };
@@ -157,6 +158,8 @@ class Signup extends APIRoute {
     }
 
     localStorage.setItem("authToken", user.auth_token);
+    props.ws.authToken = user.auth_token;
+
     setLoginNotice("");
     setUser(user);
   };
