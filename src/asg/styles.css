@@ -366,6 +366,13 @@ svg {
   background-color: #424242;
 }
 
+iframe {
+  width: 100vw;
+  height: auto;
+  border: 0;
+  height: calc(100vw * 0.6);
+}
+
 .stripe-form .img-wrap {
   width: auto;
   margin: 20px 0;
@@ -397,11 +404,59 @@ svg {
   height: 300px;
   display: flex;
   justify-content: center;
+  padding: 30px;
 }
 
 .bottom-spacer h2 {
   padding-top: 40px;
   font-size: 20px;
+  margin-left: -20px;
+}
+
+.tab-nav {
+  border-bottom: 1px solid white;
+
+  position: relative;
+
+  height: 40px;
+  margin-bottom: 20px;
+}
+
+.tab-nav .tabs {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  gap: 10px;
+  padding-left: 10px;
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+}
+
+.tab-nav a {
+  color: white;
+  padding: 8px 8px 8px 8px;
+  text-decoration: none;
+  display: block;
+  background-color: rgb(242, 97, 147);
+
+  border: 1px solid white;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.tab-nav a:last-child {
+  /* padding-right: 8px; */
+}
+.tab-nav a.active {
+  border-bottom: 1px solid rgb(242, 97, 147);
+}
+
+.tab {
+  display: none;
+}
+
+.tab.active {
+  display: block;
 }
 
 .video-list-item {

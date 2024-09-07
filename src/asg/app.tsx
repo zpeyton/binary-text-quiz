@@ -35,6 +35,7 @@ import {
   faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { PaymentUI } from "../asg-shared/tips";
+import moment from "moment";
 
 export const App = (props) => {
   console.debug("[Video] App render");
@@ -45,6 +46,8 @@ export const App = (props) => {
   let [loginNotice, setLoginNotice] = useState<any>("");
   let [signupNotice, setSignupNotice] = useState<any>("Join us");
   let [videoList, setVideoList] = useState<any>([]);
+  let [purchased, setPurchasedList] = useState<any>([]);
+  let [tab, setTab] = useState<any>("store");
   let videoRef = useRef<HTMLVideoElement>();
   let chatRef = useRef<any>();
   let webSocket = useRef<any>();
@@ -61,6 +64,10 @@ export const App = (props) => {
     }
   };
 
+  let tabClick = (event) => {
+    event.preventDefault();
+    setTab(event.target.getAttribute("href"));
+  };
   let initWebSocket = async () => {
     let reload = await checkBundleUpdate(loadDate);
     if (reload) {
@@ -191,6 +198,7 @@ export const App = (props) => {
       chatRef,
       videoRef,
       setVideoList,
+      setPurchasedList,
     });
 
     loadVideos();
@@ -215,7 +223,10 @@ export const App = (props) => {
     while (!target.getAttribute("rel")) {
       target = target.parentNode;
     }
-
+    if (user.type == "guest") {
+      alert("Please login to purchase videos");
+      return;
+    }
     setCheckout({
       product: {
         videoId: target.getAttribute("rel"),
@@ -357,44 +368,100 @@ export const App = (props) => {
             <div className="sub-page">
               <div className="scroll-list">
                 <h1>Videos</h1>
-                <p>
-                  Purchase recorded videos of our live feeds and other shows.
-                </p>
-                {(user.type == "member" || user.type == "stream") &&
-                checkout.product.amount ? (
-                  <>
-                    <PaymentUI
-                      user={user}
-                      videoId={checkout.product.videoId}
-                      amount={checkout.product.amount}
-                      webSocket={webSocket}
-                      callback={testcallback}
-                    />
-                  </>
-                ) : null}
-
-                {videoList.map((video, index) => (
-                  <div className="video-list-item" key={video.id}>
-                    <h3>Video {index}</h3>
-                    <a>{video.price || "$10"}</a>
-                    <div
-                      className="img-wrap buy"
-                      rel={video.cf_uid}
-                      aria-valuenow={video.price}
-                      onClick={buyClick}
+                <div className="tab-nav">
+                  <div className="tabs">
+                    <a
+                      className={tab == "store" ? "active" : ""}
+                      onClick={tabClick}
+                      href="store"
                     >
-                      <img
-                        src={`https://${cloudflareSubDomain}/${video.cf_uid}/${thumbJpg}`}
-                        alt={video.name}
-                      />
-                    </div>
+                      Store
+                    </a>
+                    <a
+                      className={tab == "purchased" ? "active" : ""}
+                      onClick={tabClick}
+                      href="purchased"
+                    >
+                      Purchased
+                    </a>
                   </div>
-                ))}
-
-                <div className="bottom-spacer">
-                  <h2>More coming soon!</h2>
                 </div>
+                <div className={"tab" + (tab == "purchased" ? "active" : "")}>
+                  {purchased.map((video, index) => (
+                    <div className="video-list-item" key={index}>
+                      {/* <h3>Purchased Video</h3> */}
+                      {/* <a>{video.price || "$10"}</a> */}
+                      <div
+                        className="img-wrap"
+                        rel={video.cf_uid}
+                        aria-valuenow={video.price}
+                        onClick={buyClick}
+                      >
+                        <iframe
+                          src={`https://${cloudflareSubDomain}/${video.video_id}/watch`}
+                        ></iframe>
+                      </div>
+
+                      <p
+                        title={moment
+                          .utc(video.purchase_date)
+                          .local()
+                          .toString()}
+                      >
+                        <span>Purchased</span>{" "}
+                        {moment.utc(video.purchase_date).local().fromNow()}
+                      </p>
+                    </div>
+                  ))}
+                  <div className="bottom-spacer">
+                    {purchased.length ? (
+                      <h2>Thank you for your purchase!</h2>
+                    ) : (
+                      <h2>Click the store tab to purchase your first video.</h2>
+                    )}
+                  </div>
+                </div>
+                <div className={"tab" + (tab == "store" ? "active" : "")}>
+                  <p>
+                    Purchase recorded videos of our live feeds and other shows.
+                  </p>
+                  {(user.type == "member" || user.type == "stream") &&
+                  checkout.product.amount ? (
+                    <>
+                      <PaymentUI
+                        user={user}
+                        videoId={checkout.product.videoId}
+                        amount={checkout.product.amount}
+                        webSocket={webSocket}
+                        callback={testcallback}
+                      />
+                    </>
+                  ) : null}
+                  {videoList.map((video, index) => (
+                    <div className="video-list-item" key={video.id}>
+                      <h3>Video {index}</h3>
+                      <a>{video.price || "$10"}</a>
+                      <div
+                        className="img-wrap buy"
+                        rel={video.cf_uid}
+                        aria-valuenow={video.price}
+                        onClick={buyClick}
+                      >
+                        <img
+                          src={`https://${cloudflareSubDomain}/${video.cf_uid}/${thumbJpg}`}
+                          alt={video.name}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <div className="bottom-spacer">
+                    <h2>More coming soon!</h2>
+                  </div>
+                </div>
+                {/* tab */}
               </div>
+              {/* scroll list */}
+              {/* subpage */}
             </div>
           ) : null}
 

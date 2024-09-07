@@ -304,8 +304,10 @@ class VideoList extends APIRoute {
   };
   receive = async (props) => {
     // console
-    let { results } = props.response.data.videos;
-    this.webSocket.state.setVideoList(results);
+    let { results: videos } = props.response.data.videos;
+    let { results: purchases } = props.response.data.purchases;
+    this.webSocket.state.setVideoList(videos);
+    this.webSocket.state.setPurchasedList(purchases);
   };
 }
 

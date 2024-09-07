@@ -69,6 +69,7 @@ export const StripePaymentForm = (props) => {
 
     props.webSocket.current.setState({
       setErrorMessage,
+      resetAddFunds: props.resetAddFunds,
       callback: props.callback,
     });
 
