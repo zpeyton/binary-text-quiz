@@ -64,7 +64,7 @@ export const App = (props) => {
   let [checkout, setCheckout] = useState({
     product: { videoId: 0, amount: 0 },
   });
-  const [page, setPage] = useState("videos");
+  const [page, setPage] = useState("account");
   const [startDate, setStartDate] = useState(
     new Date(moment(new Date()).format("YYYY-MM-DD HH:00:00"))
   );
@@ -405,6 +405,14 @@ export const App = (props) => {
                     Girls. <br />
                     <br />
                     All Rights Reserved.
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
                   </div>
                   <p></p>
                 </div>
@@ -556,15 +564,16 @@ export const App = (props) => {
                     </>
                   ) : null}
                   {videoList.map((video, index) => (
-                    <div className="video-list-item" key={video.id}>
+                    <div
+                      className="video-list-item"
+                      rel={video.cf_uid}
+                      aria-valuenow={video.price}
+                      onClick={buyClick}
+                      key={video.id}
+                    >
                       <h3>{video.name}</h3>
                       <a>{video.price || "$10"}</a>
-                      <div
-                        className="img-wrap buy"
-                        rel={video.cf_uid}
-                        aria-valuenow={video.price}
-                        onClick={buyClick}
-                      >
+                      <div className="img-wrap buy">
                         <img
                           src={`https://${cloudflareSubDomain}/${
                             video.cf_uid

@@ -118,6 +118,14 @@ export const StripePaymentForm = (props) => {
           Back
         </button>
         {errorMessage && <div>{errorMessage}</div>}
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
       </div>
     </form>
   );

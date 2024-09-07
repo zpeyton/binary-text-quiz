@@ -470,12 +470,13 @@ iframe {
   padding: 0;
   /* max-height: 200px; */
   /* overflow: hidden; */
+  cursor: pointer;
 }
 
 .video-list-item a {
   color: white;
   position: absolute;
-  top: 18px;
+  top: 20px;
   right: 30px;
   background-color: rgb(255, 43, 117);
   padding: 6px 10px;
@@ -554,6 +555,20 @@ p .svg-inline--fa.fa-circle-info {
   margin-right: 8px;
 }
 
+h1 .svg-inline--fa.fa-circle-info {
+  /* height: 30px;
+  width: 30px; */
+  height: 20px;
+  /* margin-right: 8px; */
+}
+
+h1 .svg-inline--fa.fa-video {
+  /* height: 30px;
+  width: 30px; */
+  height: 19px;
+  /* margin-right: 8px; */
+}
+
 @media only screen and (max-width: 450px) {
   /* .binary {
     font-size: 25px;
@@ -574,7 +589,7 @@ p .svg-inline--fa.fa-circle-info {
   }
 
   .page {
-    height: calc(100dvh);
+    height: calc(100dvh - 60px);
     overflow: hidden;
   }
 
