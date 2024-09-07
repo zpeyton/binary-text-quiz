@@ -1,10 +1,32 @@
+import { faVolumeHigh, faVolumeMute } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import moment from "moment";
 import React, { useEffect, useRef, useState } from "react";
 
 export const Video = (props) => {
   let [videoLink, setVideoLink] = useState<any>();
   let recorder = useRef<any>();
+  let [byteRate, setByteRate] = useState(0);
+  let [muted, setMuted] = useState<any>(true);
 
   let configWhep = () => {};
+
+  const toggleVolume = (event) => {
+    event.preventDefault();
+
+    if (!props.videoRef.current) {
+      return;
+    }
+    console.log("props.videoRef.current", props.videoRef.current);
+    // event.currentTarget = text;
+
+    props.videoRef.current.muted = props.videoRef.current.muted ? false : true;
+    setMuted(props.videoRef.current.muted);
+  };
+
+  const toggleCamera = (event) => {
+    props.whip.client.switchCamera(props.videoRef);
+  };
 
   useEffect(() => {
     console.debug("[Video]", "[useEffect]", "no deps");
@@ -13,16 +35,17 @@ export const Video = (props) => {
 
     if (props.whep.client) {
       console.debug("[Video] Update video element");
-      props.whep.client.videoElement = props.videoEl.current;
+      props.whep.client.videoElement = props.videoRef.current;
     }
 
     if (props.user.type == "stream") {
       let whipConfig = {
         user: props.user,
         videoRef: props.videoRef,
-        disconnected: () => {
+        disconnected: (whip) => {
           console.log("[WHIP] Reload after disconnect");
-          window.location.reload();
+          //window.location.reload();
+          whip.negotiate();
         },
         connected: (whip) => {
           console.debug("[Whip] connected");
@@ -39,22 +62,35 @@ export const Video = (props) => {
       let whepConfig = {
         user: props.user,
         videoRef: props.videoRef,
-        disconnected: () => {
+        disconnected: (whep) => {
           props.setVideo(false);
           //props.chatRef.current.serverDisconnected();
-          window.location.reload();
+          whep.init();
         },
         connected: (whep) => {
           props.setVideo(true);
           // console.log(whep.client.stream);
           if (props.videoRef.current) {
             props.videoRef.current.srcObject = whep.client.stream;
-            // props.videoRef.current.play();
+            //props.videoRef.current.play();
             recorder.current = new MediaRecorder(whep.client.stream, {
               mimeType: "video/mp4",
             });
-
             recorder.current.start();
+            // @ts-ignore
+            window.whep = whep;
+            // whep.startTime = new Date();
+            // clearInterval(whep.byteRateInterval);
+            // whep.byteRateInterval = setInterval(async () => {
+            //   let stats = await whep.client.peerConnection.getStats();
+            //   let totalBytesReceived = stats.get("T01").bytesReceived;
+            //   let totalTimeElapsed =
+            //     moment(new Date()).diff(whep.startTime) / 1000;
+            //   let byteRate = totalBytesReceived / totalTimeElapsed;
+            //   let bytRateRound = Math.round(byteRate / 1000);
+            //   // console.log("byteRate", Math.round(byteRate / 1000), "KB/s");
+            //   setByteRate(bytRateRound);
+            // }, 1000);
           }
         },
       };
@@ -74,7 +110,7 @@ export const Video = (props) => {
       let a = () => {
         let url = ["video_", (new Date() + "").slice(4, 28), ".mp4"].join("");
         let href = URL.createObjectURL(e.data);
-        console.log("REcorder.ondataavailable a", url, href);
+        console.log("Recorder.ondataavailable a", url, href);
         videoRecorder.start();
         return (
           <a download={url} href={href}>
@@ -86,10 +122,25 @@ export const Video = (props) => {
       setVideoLink(a());
     };
   };
-  console.debug("[Video] render", props);
+  // console.debug("[Video] render", props);
 
   return (
     <>
+      {/* {byteRate} KB/s
+      <br /> */}
+      {props.user.type != "stream" ? (
+        <a className="volume-toggle" onClick={toggleVolume}>
+          {muted ? (
+            <FontAwesomeIcon icon={faVolumeMute} />
+          ) : (
+            <FontAwesomeIcon icon={faVolumeHigh} />
+          )}
+        </a>
+      ) : (
+        <button className="camera-toggle" onClick={toggleCamera}>
+          Switch Camera
+        </button>
+      )}
       <video
         ref={props.videoRef as any}
         id="watch"

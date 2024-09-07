@@ -8,25 +8,50 @@ import {
   whip,
   whep,
   Video,
-  LoginUI,
-  SignupUI,
   WebSocketChat,
   PRODUCTION,
   checkBundleUpdate,
+  AuthUI,
   logout,
+  cloudflareSubDomain,
 } from "../asg-shared";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faUser,
+  faComments,
+  faVideo,
+  faShoppingCart,
+  faGift,
+  faUsers,
+  faList,
+  faCalendar,
+  faCalendarAlt,
+  faMoneyBill,
+  faCommentsDollar,
+  faCircleInfo,
+  faTowerBroadcast,
+  faTowerCell,
+  faDollarSign,
+  faInfoCircle,
+} from "@fortawesome/free-solid-svg-icons";
+import { PaymentUI } from "../asg-shared/tips";
 
 export const App = (props) => {
   console.debug("[Video] App render");
   let [webSocketHost, setWebSocketHost] = useState<any>(props.webSocketHost);
   let [user, setUser] = useState<any>({});
   let [loadDate, setLoadDate] = useState<any>(new Date());
-  let [video, setVideo] = useState(false);
+  let [video, setVideo] = useState(true);
   let [loginNotice, setLoginNotice] = useState<any>("");
-  let [signupNotice, setSignupNotice] = useState<any>("Become a member");
+  let [signupNotice, setSignupNotice] = useState<any>("Join us");
+  let [videoList, setVideoList] = useState<any>([]);
   let videoRef = useRef<HTMLVideoElement>();
   let chatRef = useRef<any>();
   let webSocket = useRef<any>();
+  let [checkout, setCheckout] = useState({
+    product: { videoId: 0, amount: 0 },
+  });
+  const [page, setPage] = useState("videos");
 
   let cleanupStreamClient = async () => {
     whip.client?.peerConnection?.close();
@@ -124,6 +149,13 @@ export const App = (props) => {
       // console.log("webSocket readyState", webSocket.current.ws.readyState);
     });
 
+    // window.addEventListener("load", function () {
+    //   // alert("load event");
+    //   setTimeout(function () {
+    //     window.scrollTo(0, 500);
+    //   }, 100);
+    // });
+
     console.debug("[initWebsocket] set window events");
     window.addEventListener("focus", async (event) => {
       checkBundleUpdate(loadDate);
@@ -158,56 +190,223 @@ export const App = (props) => {
       loginNotice,
       chatRef,
       videoRef,
+      setVideoList,
     });
+
+    loadVideos();
   }, [user]);
 
+  const loadVideos = async () => {
+    await webSocket.current.api.VideoList.send();
+  };
+
+  const handleNavClick = (page) => {
+    setPage(page);
+    // Add navigation logic here if needed
+    if (page == "chat") {
+    }
+  };
+
+  const buyClick = (event) => {
+    event.preventDefault();
+    console.log("buy video", event.target.parentNode);
+    let target = event.target;
+
+    while (!target.getAttribute("rel")) {
+      target = target.parentNode;
+    }
+
+    setCheckout({
+      product: {
+        videoId: target.getAttribute("rel"),
+        amount: target.getAttribute("aria-valuenow"),
+      },
+    });
+  };
+
+  const testcallback = (success) => {
+    console.log("testcallback");
+    setCheckout({
+      product: {
+        videoId: 0,
+        amount: 0,
+      },
+    });
+    if (success) {
+      console.log("Payment success");
+      // do we reload purchases?
+    }
+  };
+
+  let logoutClick = (event) => {
+    event.preventDefault();
+    logout();
+  };
+
+  const LogoutBtn = (props) => {
+    return (
+      <>
+        <a onClick={logoutClick} href="#" className="login">
+          Logout
+        </a>
+      </>
+    );
+  };
+
+  // let videos = [
+  //   {
+  //     uid: 1,
+  //     name: "blah",
+  //     thumbnail:
+  //       "https://customer-aria4pdgkvgu9z0v.cloudflarestream.com/672896e889910d6fe3f53b8713cef853/thumbnails/thumbnail.jpg",
+  //   },
+  // ];
+
+  let loggedIn = user.type == "member" || user.type == "stream";
+  let thumbJpg = "thumbnails/thumbnail.jpg";
+
+  console.log("checkout", checkout);
   return (
     <div className="page">
-      {user.type == "stream" ? null : (
-        <>
-          {loginNotice ? (
-            <>
-              <div className="waiting">
-                <LoginUI notice={loginNotice} webSocket={webSocket} />
-                <SignupUI notice={signupNotice} webSocket={webSocket} />
-              </div>
-            </>
-          ) : null}
-        </>
-      )}
+      {user.type == "stream" ? null : <>{loginNotice ? <></> : null}</>}
 
       {user.type ? (
         <>
-          {user.type == "member" || user.type == "stream" ? (
-            <>
-              <a
-                onClick={(event) => {
-                  event.preventDefault();
-                  logout();
-                }}
-                href="#"
-                className="login"
+          <nav className="bottom-nav">
+            <ul>
+              <li
+                className={page === "account" ? "active" : ""}
+                onClick={() => handleNavClick("account")}
               >
-                Logout
-              </a>
-            </>
-          ) : (
+                <FontAwesomeIcon icon={faTowerCell} />
+              </li>
+              {/* <li
+                className={page === "chat" ? "active" : ""}
+                onClick={() => handleNavClick("chat")}
+              >
+                <FontAwesomeIcon icon={faCommentsDollar} />
+              </li> */}
+              <li
+                className={page === "videos" ? "active" : ""}
+                onClick={() => handleNavClick("videos")}
+              >
+                <FontAwesomeIcon icon={faList} />
+              </li>
+              <li
+                className={page === "book" ? "active" : ""}
+                onClick={() => handleNavClick("book")}
+              >
+                <FontAwesomeIcon icon={faCalendarAlt} />
+              </li>
+              <li
+                className={page === "info" ? "active" : ""}
+                onClick={() => handleNavClick("info")}
+              >
+                <FontAwesomeIcon icon={faCircleInfo} />
+              </li>
+            </ul>
+          </nav>
+
+          {page == "info" ? (
             <>
-              {!loginNotice ? (
-                <>
-                  <a
-                    onClick={(event) => {
-                      event.preventDefault();
-                      setLoginNotice("Login");
-                    }}
-                    className="login"
-                  >
-                    Login / Sign up
-                  </a>
-                </>
-              ) : null}
+              {loggedIn ? <LogoutBtn /> : null}
+              <div className="sub-page">
+                <div className="scroll-list">
+                  <h1>
+                    <FontAwesomeIcon icon={faInfoCircle} /> About Us
+                  </h1>
+                  <p>
+                    Aloha Surf Girls is based in Haleiwa HI, on the North Shore
+                    of O'ahu.
+                  </p>
+                  <div className="text-center">
+                    <img src="https://alohasurfgirls.com/alohasurfgirls.png" />
+                    <br />
+                    <br />
+                    PO Box 1012, Haleiwa, HI 96712, US
+                    <br />
+                    <br />
+                    808-492-2909
+                    <br />
+                    <br />
+                    Copyright © 2024 Aloha Surf Girls <br />
+                    <br />
+                    All Rights Reserved.
+                  </div>
+                  <p></p>
+                </div>
+              </div>
             </>
-          )}
+          ) : null}
+
+          {page == "book" ? (
+            <div className="sub-page">
+              <div className="scroll-list">
+                <h1>
+                  <FontAwesomeIcon icon={faCalendarAlt} /> Book a session
+                </h1>
+                <p>
+                  Schedule a private session. Pick a date and reserve a time
+                  slot.
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          {page == "videos" ? (
+            <div className="sub-page">
+              <div className="scroll-list">
+                <h1>Videos</h1>
+                <p>
+                  Purchase recorded videos of our live feeds and other shows.
+                </p>
+                {(user.type == "member" || user.type == "stream") &&
+                checkout.product.amount ? (
+                  <>
+                    <PaymentUI
+                      user={user}
+                      videoId={checkout.product.videoId}
+                      amount={checkout.product.amount}
+                      webSocket={webSocket}
+                      callback={testcallback}
+                    />
+                  </>
+                ) : null}
+
+                {videoList.map((video, index) => (
+                  <div className="video-list-item" key={video.id}>
+                    <h3>Video {index}</h3>
+                    <a>{video.price || "$10"}</a>
+                    <div
+                      className="img-wrap buy"
+                      rel={video.cf_uid}
+                      aria-valuenow={video.price}
+                      onClick={buyClick}
+                    >
+                      <img
+                        src={`https://${cloudflareSubDomain}/${video.cf_uid}/${thumbJpg}`}
+                        alt={video.name}
+                      />
+                    </div>
+                  </div>
+                ))}
+
+                <div className="bottom-spacer">
+                  <h2>More coming soon!</h2>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          <AuthUI
+            user={user}
+            loginNotice={loginNotice}
+            signupNotice={signupNotice}
+            setLoginNotice={setLoginNotice}
+            webSocket={webSocket}
+          />
+
+          {page == "account" ? <></> : null}
 
           <Video
             user={user}
@@ -219,7 +418,6 @@ export const App = (props) => {
             setVideo={setVideo}
             webSocket={webSocket}
           />
-
           <WebSocketChat
             ref={chatRef}
             user={user}

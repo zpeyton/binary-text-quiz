@@ -6,7 +6,7 @@ import React, {
   useImperativeHandle,
 } from "react";
 import moment from "moment";
-import { LoginUI, SignupUI } from "./auth";
+import { LoginUI, SignupUI, AuthUI } from "./auth";
 import { Video } from "../asg-shared/video";
 import * as Icons from "./icons";
 import WS from "./websocket/websocket";
@@ -42,11 +42,18 @@ const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY || "");
 
 const bundleUrl = `${document.location.href}asg.bundle-${process.env.VERSION}.js`;
 
+const cloudflareSubDomain = "customer-aria4pdgkvgu9z0v.cloudflarestream.com";
+
 const fetchLastModified = async (url) => {
-  const res = await fetch(url, { method: "HEAD" });
-  let lastModified = res.headers.get("Last-Modified") || 0;
+  try {
+    const res = await fetch(url, { method: "GET" });
+    let lastModified = res.headers.get("Last-Modified") || 0;
+    return new Date(lastModified);
+  } catch (e) {
+    console.log("Could not get last modified header");
+    return 0;
+  }
   // console.log("lastModifiedHeader", lastModified);
-  return new Date(lastModified);
 };
 
 const shouldUpdate = async (url, loadDate) => {
@@ -95,6 +102,7 @@ export {
   Icons,
   LoginUI,
   SignupUI,
+  AuthUI,
   Video,
   WebSocketChat,
   TipUI,
@@ -112,4 +120,5 @@ export {
   DEFAULT_EMAIL,
   DEFAULT_USERNAME,
   DEFAULT_PASSWORD,
+  cloudflareSubDomain,
 };

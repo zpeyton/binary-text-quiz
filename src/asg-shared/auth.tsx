@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { DEFAULT_EMAIL, DEFAULT_PASSWORD, DEFAULT_USERNAME } from ".";
+import { DEFAULT_EMAIL, DEFAULT_PASSWORD, DEFAULT_USERNAME, logout } from ".";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUser, faUserPlus, faUsers } from "@fortawesome/free-solid-svg-icons";
 
 export const SignupUI = (props) => {
   let usernameRef = useRef<HTMLInputElement>();
@@ -53,7 +55,7 @@ export const SignupUI = (props) => {
 
   return 1 ? (
     <div>
-      {props.notice}
+      <FontAwesomeIcon icon={faUserPlus} /> {props.notice}
       <p>
         {/* {errors.map((item) => {
             return item.type;
@@ -150,7 +152,7 @@ export const LoginUI = (props) => {
 
   return props.notice ? (
     <div>
-      {props.notice}
+      <FontAwesomeIcon icon={faUser} /> {props.notice}
       <p>
         {/* {errors.map((item) => {
             return item.type;
@@ -177,9 +179,62 @@ export const LoginUI = (props) => {
         />
       </p>
       {errors.some((item) => item.type == "password") ? (
-        <p>Missing Password</p>
+        <p>Missing Password!</p>
       ) : null}
       <button onClick={loginSubmit}>Login</button>
     </div>
   ) : null;
+};
+
+export const AuthUI = (props) => {
+  let { user, loginNotice, setLoginNotice, signupNotice, webSocket } = props;
+
+  // let logoutClick = (event) => {
+  //   event.preventDefault();
+  //   logout();
+  // };
+
+  let loginClick = (event) => {
+    event.preventDefault();
+    setLoginNotice("Login");
+  };
+
+  let cancelLoginSignupClick = (event) => {
+    event.preventDefault();
+    setLoginNotice("");
+  };
+
+  const LoginSignupBtn = (props) => {
+    return (
+      <>
+        <a onClick={loginClick} className="login">
+          <FontAwesomeIcon icon={faUser} /> Login |{" "}
+          <FontAwesomeIcon icon={faUserPlus} /> Sign up
+        </a>
+      </>
+    );
+  };
+
+  let loggedIn = user.type == "member" || user.type == "stream";
+
+  return loggedIn ? (
+    <></>
+  ) : (
+    <>
+      {loginNotice ? (
+        <div className="waiting">
+          <LoginUI notice={loginNotice} webSocket={webSocket} />
+          <SignupUI notice={signupNotice} webSocket={webSocket} />
+          <button
+            className="cancel-login-signup"
+            onClick={cancelLoginSignupClick}
+          >
+            X
+          </button>
+        </div>
+      ) : (
+        <LoginSignupBtn />
+      )}
+    </>
+  );
 };

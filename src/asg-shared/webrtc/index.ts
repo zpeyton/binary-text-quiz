@@ -52,7 +52,7 @@ export class WHIP {
       audio: true,
     };
 
-    console.debug("[WHIP.init]", constraints);
+    // console.debug("[WHIP.init]", constraints);
 
     this.client
       .accessLocalMediaSources(constraints)
@@ -74,19 +74,6 @@ export class WHIP {
 
       await this.negotiate();
     });
-
-    // peerConnection.onicegatheringstatechange = (event) => {
-    //   let { iceGatheringState: state } = event.target;
-    //   console.log(
-    //     "[WHEP.init]",
-    //     "onicegatheringstatechange",
-    //     event.target.iceGatheringState
-    //   );
-
-    //   if (state === "complete") {
-    //     console.log("[WHEP.init]", "iceGatheringState", state);
-    //   }
-    // };
   }
 
   async negotiate() {
@@ -139,7 +126,7 @@ export class WHIP {
     } catch (e) {
       setTimeout(() => {
         this.connect();
-      }, 5000);
+      }, 6000);
     }
 
     let answerSDP = await response.text();
@@ -181,8 +168,19 @@ export class WHEP {
 
     this.config = config;
     let { play } = config.user;
+
+    if (document.location.href.includes("test")) {
+      play =
+        "https://customer-aria4pdgkvgu9z0v.cloudflarestream.com/341f971987242898666f88c9bdd75cad/webRTC/play";
+    }
+
     this.videoRef = config.videoRef;
     this.play = play;
+
+    if (!play) {
+      console.log("Awaiting play url");
+      return;
+    }
 
     this.client = new WHEPClient(play, this.videoRef.current);
 
@@ -250,6 +248,10 @@ export class WHEP {
     for (let i in config) {
       this[i] = config[i];
     }
+  }
+  live(playUrl) {
+    this.play = playUrl;
+    this.init();
   }
 }
 

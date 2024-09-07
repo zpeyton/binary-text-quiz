@@ -62,7 +62,7 @@ var asgConfig = Object.assign({}, commonConfig, {
   },
   devServer: {
     hot: true,
-    host: "localhost",
+    host: "0.0.0.0",
     server: "spdy",
     port: 443,
     static: {

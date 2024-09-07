@@ -8,16 +8,28 @@ import {
   Icons,
   TipUI,
 } from "../asg-shared";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faUser,
+  faComments,
+  faVideo,
+  faShoppingCart,
+  faGift,
+  faVolumeMute,
+  faVolumeHigh,
+  faComment,
+  faAd,
+} from "@fortawesome/free-solid-svg-icons";
 
 export const WebSocketChat = forwardRef((props: any, ref) => {
   //console.debug("[WS] WebSocketChat start");
 
   let [chats, setChats] = useState<any>([]);
-  let [newChats, setNewChats] = useState<any>([]);
+  // let [newChats, setNewChats] = useState<any>([]);
 
   let [members, setMembers] = useState<any>([]);
-  let [newMembers, setNewMembers] = useState<any>([]);
-  let [removeMembers, setRemoveMembers] = useState<any>([]);
+  // let [newMembers, setNewMembers] = useState<any>([]);
+  // let [removeMembers, setRemoveMembers] = useState<any>([]);
 
   let [display, setDisplay] = useState<any>("");
   let [twoevencols, setTwoevencols] = useState<any>(false);
@@ -25,18 +37,32 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
   let btnSendChat = useRef<HTMLAnchorElement>();
   let chatLog = useRef<HTMLDivElement>();
 
+  const newChat = (json) => {
+    // console.log("[WS]", "newChat", chats);
+    setChats(chats.concat([json]));
+  };
+
+  const removeDupsFromObjectArray = (arr, propName) => {
+    const props = arr.map((item) => item[propName]);
+    // console.log("[useEffect members]", users);
+    const filtered = arr.filter(
+      (item, index) => !props.includes(item[propName], index + 1)
+    );
+    return filtered;
+  };
+
   useImperativeHandle(ref, () => ({
     newChat(json) {
-      // console.log("[WS]", "newChat");
-      setNewChats([json]);
+      newChat(json);
     },
     newMembers(json) {
-      // console.log("[WS]", "newMembers");
-      setNewMembers([json]);
+      setMembers(members.concat([json]));
     },
 
     removeMembers(json) {
-      setRemoveMembers(json);
+      let filtered = members.filter((member) => member.joined != json.quit);
+      // console.log("filtered", filtered);
+      setMembers(filtered);
     },
 
     toggle() {
@@ -47,13 +73,11 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
     },
 
     serverDisconnected() {
-      setNewChats([
-        {
-          name: "Server",
-          message: "Disconnected. Refreshing in 20 seconds",
-          timestamp: new Date(),
-        },
-      ]);
+      newChat({
+        name: "Server",
+        message: "Disconnected. Refreshing in 20 seconds",
+        timestamp: new Date(),
+      });
     },
   }));
 
@@ -68,35 +92,33 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
   }, [chats]);
 
   useEffect(() => {
-    setChats(chats.concat(newChats));
-  }, [newChats]);
-
-  useEffect(() => {
     // console.log("[Chat]", "members changed", members);
-    const users = members.map(({ joined }) => joined);
-    // console.log("[useEffect members]", users);
-    const filtered = members.filter(
-      ({ joined }, index) => !users.includes(joined, index + 1)
-    );
-    // console.log("[useEffect members] filtered", filtered);
+    props.webSocket.current.setState(props);
+    const filtered = removeDupsFromObjectArray(members, "joined");
     if (filtered.length != members.length) {
       setMembers(filtered);
     }
   }, [members]);
 
-  useEffect(() => {
-    props.webSocket.current.setState(props);
-    setMembers(members.concat(newMembers));
-  }, [newMembers]);
+  const kickClick = (event) => {
+    event?.preventDefault();
+    let sure = confirm("Are you sure you want to kick this user?");
+    if (!sure) {
+      return;
+    }
+    let kick = event.target.getAttribute("href");
+    props.webSocket.current.api.Kick.send({ kick });
+  };
 
-  useEffect(() => {
-    props.webSocket.current.setState(props);
-    let filtered = members.filter(
-      (member) => member.joined != removeMembers.quit
-    );
-    // console.log("filtered", filtered);
-    setMembers(filtered);
-  }, [removeMembers]);
+  let isAdmin = props.user.type == "stream";
+
+  let Kick = (props) => {
+    return isAdmin ? (
+      <a onClick={kickClick} href={props.username}>
+        X
+      </a>
+    ) : null;
+  };
 
   const toggleTwoevencols = () => {
     setTwoevencols(twoevencols ? "" : "twoevencols");
@@ -104,20 +126,6 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
 
   const toggle = () => {
     setDisplay(display ? null : "hidden");
-  };
-
-  const toggleVolume = (event) => {
-    if (!props.videoRef.current) {
-      return;
-    }
-
-    let text = props.videoRef.current.muted ? "Mute" : "UnMute";
-    event.currentTarget.innerText = text;
-    props.videoRef.current.muted = props.videoRef.current.muted ? false : true;
-  };
-
-  const toggleCamera = (event) => {
-    props.whip.client.switchCamera(props.videoRef);
   };
 
   const chatKeyDown = async (event) => {
@@ -145,36 +153,35 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
   };
 
   //console.debug("[WS] Render");
-
+  let viewers = members.filter(
+    (item) => item.joined != "alohasurfgirls" && item.joined != "zap"
+  );
   return (
     <>
       <div className={"chat-ui"}>
-        <div className="controls">
-          {props.user.type != "stream" ? (
-            <button className="toggle" onClick={toggleVolume}>
-              Unmute
-            </button>
-          ) : (
-            <button className="toggle" onClick={toggleCamera}>
-              Switch Camera
-            </button>
-          )}
-
-          <button className="toggle" onClick={toggle}>
-            X
-          </button>
-        </div>
-        <div>
-          {members.length ? <>Users: {members.length}</> : null}
+        <div className="viewers">
+          {members.length ? (
+            <>
+              <FontAwesomeIcon icon={faUser} /> {viewers.length}
+            </>
+          ) : null}
           {members &&
             members.map((item, index) => {
               return (
                 <div key={index}>
-                  <span>{item.joined}</span>
+                  <div>
+                    {item.joined} <Kick username={item.joined} />
+                  </div>
                 </div>
               );
             })}
         </div>
+        <div className="controls">
+          <button className="toggle" onClick={toggle}>
+            <FontAwesomeIcon icon={faComment} />
+          </button>
+        </div>
+
         <div className={"chat-log " + display} ref={chatLog as any}>
           {chats &&
             chats.map((item, index) => {

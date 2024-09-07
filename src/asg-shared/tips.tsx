@@ -10,6 +10,7 @@ import {
   useElements,
   useStripe,
   StripeElements,
+  cloudflareSubDomain,
 } from "../asg-shared";
 
 export const StripePaymentForm = (props) => {
@@ -19,12 +20,12 @@ export const StripePaymentForm = (props) => {
 
   const handleError = (error) => {
     console.log("handleError", error);
-    setErrorMessage(error);
+    setErrorMessage(error.message);
   };
 
   const goback = (event) => {
     event.preventDefault();
-    props.resetAddFunds();
+    props.callback();
   };
 
   const stripeSubmit = async (event) => {
@@ -63,11 +64,12 @@ export const StripePaymentForm = (props) => {
       confirmation_token: confirmationToken.id,
       customer: props.session.customerId,
       amount: props.amount * 100,
+      videoId: props.videoId,
     };
 
     props.webSocket.current.setState({
       setErrorMessage,
-      resetAddFunds: props.resetAddFunds,
+      callback: props.callback,
     });
 
     new Routes().Pay.send(props.webSocket.current, postBody);
@@ -87,17 +89,35 @@ export const StripePaymentForm = (props) => {
     //   props.resetAddFunds(res.data.newBalance);
     // }
   };
+  let thumbJpg = "thumbnails/thumbnail.jpg";
 
   return (
     <form className="stripe-form" onSubmit={stripeSubmit}>
-      <h2 className="payment">Aloha {props.user.email}!</h2>
-      <p className="amount">Let's add ${props.amount} to your account.</p>
-      <PaymentElement />
-      <button className="stripe-form-submit">Pay</button>{" "}
-      <button className="" onClick={goback}>
-        Back
-      </button>
-      {errorMessage && <div>{errorMessage}</div>}
+      <div className="scroll-list">
+        <h2 className="payment">Aloha {props.user.email}!</h2>
+        {props.videoId ? (
+          <>
+            Please enter your payment information. We will bill ${props.amount}{" "}
+            for the following video:
+            <div className="img-wrap">
+              <img
+                src={`https://${cloudflareSubDomain}/${props.videoId}/${thumbJpg}`}
+                alt={props.videoId}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="amount">
+            Let's add ${props.amount} to your account.
+          </div>
+        )}
+        <PaymentElement />
+        <button className="stripe-form-submit">Pay</button>{" "}
+        <button className="" onClick={goback}>
+          Back
+        </button>
+        {errorMessage && <div>{errorMessage}</div>}
+      </div>
     </form>
   );
 };
@@ -116,8 +136,9 @@ export const PaymentUI = (props) => {
   };
 
   useEffect(() => {
-    if (!props.user.type) {
-      return; // user not set yet
+    if (props.user.type != "member" && props.user.type != "stream") {
+      console.log("User not logged in");
+      return;
     }
     // console.log("Use Effect PaymentUI");
     getPaymentSession();
@@ -153,10 +174,11 @@ export const PaymentUI = (props) => {
       {stripeOptions ? (
         <StripeElements stripe={stripePromise} options={stripeOptions}>
           <StripePaymentForm
+            videoId={props.videoId}
             amount={props.amount || 20}
             user={props.user}
             session={stripeSession}
-            resetAddFunds={props.resetAddFunds}
+            callback={props.callback}
             webSocket={props.webSocket}
           />
         </StripeElements>
@@ -234,7 +256,7 @@ export const AddFundsUI = (props) => {
       {updateCreditCard ? (
         <PaymentUI
           webSocket={props.webSocket}
-          resetAddFunds={resetAddFunds}
+          callback={resetAddFunds}
           user={props.user}
           amount={inputAmountRef.current?.value}
         />

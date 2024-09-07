@@ -72,19 +72,19 @@ input[name="tip-amount"] {
   /* padding: 10px; */
   width: 100%;
   position: fixed;
-  bottom: 20px;
+  bottom: 60px;
   z-index: 1;
 }
 
 .loading-video {
   position: absolute;
   display: flex;
-  align-items: center;
+  /* align-items: center; */
   justify-content: center;
-  top: 0;
+  top: 200px;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  /* height: auto; */
 }
 
 h2.payment {
@@ -93,16 +93,32 @@ h2.payment {
 
 .page {
   position: relative;
-  height: calc(100vh + 1px);
+  height: calc(100vh + 0px);
   width: 100vw;
   overflow: visible;
+}
+
+.volume-toggle,
+.camera-toggle {
+  position: absolute;
+  top: 26px;
+  left: 10px;
+  z-index: 1;
+}
+
+.cancel-login-signup {
+  display: block;
+  position: absolute;
+  width: fit-content;
+  top: 2px;
+  right: 44px;
 }
 
 .login {
   position: absolute;
   background-color: rgb(255, 43, 117);
   padding: 10px;
-  z-index: 3;
+  z-index: 100;
   right: 0;
   color: white;
   cursor: pointer;
@@ -116,7 +132,7 @@ h2.payment {
   background-color: rgb(242, 97, 147);
   display: grid;
   grid-template-columns: auto auto;
-  z-index: 1;
+  z-index: 10;
 }
 
 svg {
@@ -228,13 +244,11 @@ svg {
 .chat-log div span {
   display: inline;
   white-space: wrap;
-  /* width: fit-content; */
 }
 
 .chat-log div span:first-child {
   white-space: nowrap;
   max-width: 130px;
-  /* width: fit-content; */
   overflow: hidden;
   color: rgb(140, 140, 177);
   /* text-overflow: ellipsis; */
@@ -266,6 +280,178 @@ svg {
   margin: 0;
 }
 
+.bottom-nav {
+  background-color: #333;
+  color: white;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 60px;
+  border-top: 1px solid #555;
+  z-index: 100;
+}
+
+.bottom-nav ul {
+  list-style: none;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  justify-content: space-around;
+}
+
+.bottom-nav li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  height: 100%;
+  flex: 1;
+  font-size: 24px; /* Adjust the size of the icons */
+}
+
+.bottom-nav li.active {
+  background-color: #555;
+}
+
+.bottom-nav li svg {
+  color: white; /* Ensure the icons are white */
+}
+
+.viewers {
+  padding-left: 10px;
+  padding-bottom: 10px;
+  height: 50px;
+  overflow: auto;
+}
+
+.sub-page h1 svg {
+  height: 22px;
+}
+
+.sub-page {
+  position: absolute;
+  /* height: calc(100vh - 60px);
+  overflow: auto; */
+  top: 20px;
+  overflow: hidden;
+  z-index: 5;
+  background-color: rgb(242, 97, 147);
+}
+
+.sub-page p {
+  padding-left: 10px;
+  padding-right: 30px;
+}
+
+.scroll-list {
+  overflow: auto;
+  height: calc(100vh - 100px);
+  width: calc(100vw + 20px);
+  padding-top: 20px;
+}
+
+.sub-page h1 {
+  padding-left: 10px;
+}
+
+.img-wrap {
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  background-color: #424242;
+}
+
+.stripe-form .img-wrap {
+  width: auto;
+  margin: 20px 0;
+}
+
+.stripe-form .scroll-list {
+  margin-left: -20px;
+  margin-right: -20px;
+  padding: 20px;
+  width: auto;
+}
+
+.buy {
+  cursor: pointer;
+}
+
+.sub-page img {
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  display: block;
+  /* width: 100vw; */
+  object-fit: cover;
+}
+
+.bottom-spacer {
+  height: 300px;
+  display: flex;
+  justify-content: center;
+}
+
+.bottom-spacer h2 {
+  padding-top: 40px;
+  font-size: 20px;
+}
+
+.video-list-item {
+  position: relative;
+  /* border: 1px solid; */
+  margin-bottom: 40px;
+  padding: 0;
+  /* max-height: 200px; */
+  /* overflow: hidden; */
+}
+
+.video-list-item a {
+  color: white;
+  position: absolute;
+  top: 18px;
+  right: 30px;
+  background-color: rgb(255, 43, 117);
+  padding: 6px 10px;
+  border-radius: 10px;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  text-decoration: none;
+}
+
+.video-list-item h3 {
+  position: absolute;
+  top: -13px;
+  right: 30px;
+  background: rgba(100, 100, 100, 0.8);
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 250px;
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 16px;
+}
+
+.scroll-list .text-center {
+  text-align: center;
+  margin-left: -20px; /* because we moved the scoll list over 20 px */
+}
+
+.scroll-list .text-center img {
+  display: inline;
+}
+
 @media only screen and (max-width: 450px) {
   /* .binary {
     font-size: 25px;
@@ -281,15 +467,23 @@ svg {
   .chat input {
     width: calc(100% - 4px);
   }
+
   .page {
     height: calc(100dvh);
+    overflow: hidden;
+  }
+
+  .scroll-list {
+    overflow: auto;
+    height: calc(100vdh - 420px);
+    /* border: 1px solid #f00; */
   }
 
   /* video {
     height: calc(100dvh);
   } */
 
-  .loading-video {
+  /* .loading-video {
     height: 100dvh;
-  }
+  } */
 }

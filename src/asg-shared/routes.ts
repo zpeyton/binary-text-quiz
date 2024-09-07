@@ -66,7 +66,7 @@ class User extends APIRoute {
   };
 }
 
-class VideoRoute extends APIRoute {
+class Video extends APIRoute {
   send = async (body) => {
     console.log("[API.Video]", this);
     let request = {
@@ -78,17 +78,36 @@ class VideoRoute extends APIRoute {
   };
 
   receive = async (props) => {
-    let { live } = props.response.data;
+    let { live, play } = props.response.data;
     let { user, whep } = props.ws.state;
 
     if (live && user.type != "stream") {
       console.log("got video update");
+      // if (whep.client.peerConnection.connectionState == "connected") {
+      //   console.log("[API.Video]Already connected");
+      //   return;
+      // }
 
       setTimeout(() => {
-        whep.init();
+        whep.live(play);
         //window.location.reload();
-      }, 4000);
+      }, 5000);
     }
+  };
+}
+
+class Kick extends APIRoute {
+  send = async (body) => {
+    console.log("[API.Kick]", this);
+    let request = {
+      method: "post",
+      path: "Kick",
+      body,
+    };
+    await this.webSocket.send(request);
+  };
+  receive = async (props) => {
+    // console
   };
 }
 
@@ -217,12 +236,12 @@ class Pay {
 
   async receive(props) {
     let { ws, response } = props;
-    let { setStripeSession, setErrorMessage, resetAddFunds } = ws.state;
+    let { setStripeSession, setErrorMessage, callback } = ws.state;
     let { data: session } = response;
     let { request } = response;
 
     if (request.method == "get") {
-      if (session.status == "fail") {
+      if (response.status == "fail") {
         setErrorMessage(session.message);
         return;
       }
@@ -230,13 +249,13 @@ class Pay {
     }
 
     if (request.method == "post") {
-      if (session.status == "fail") {
-        setErrorMessage(session.message);
+      if (response.status == "fail") {
+        setErrorMessage(response.message);
         return;
       }
 
       if (session.intent.status == "succeeded") {
-        resetAddFunds(session.newBalance);
+        callback(session);
       }
     }
   }
@@ -256,6 +275,40 @@ class Tip extends APIRoute {
   };
 }
 
+class Blah extends APIRoute {
+  send = async (body) => {
+    console.log("[API.]", this);
+    let request = {
+      method: "get",
+      path: "",
+      body,
+    };
+    await this.webSocket.send(request);
+  };
+  receive = async (props) => {
+    // console
+    let { result } = props.response.data.videos;
+    // this.webSocket.state.setVideoList(result);
+  };
+}
+
+class VideoList extends APIRoute {
+  send = async (body) => {
+    console.log("[API.VideoList]", this);
+    let request = {
+      method: "get",
+      path: "VideoList",
+      body,
+    };
+    await this.webSocket.send(request);
+  };
+  receive = async (props) => {
+    // console
+    let { results } = props.response.data.videos;
+    this.webSocket.state.setVideoList(results);
+  };
+}
+
 export class Routes {
   webSocket;
   Auth;
@@ -266,15 +319,19 @@ export class Routes {
   Signup;
   Pay;
   Tip;
+  Kick;
+  VideoList;
   constructor(webSocket?) {
     this.webSocket = webSocket;
     this.Auth = new Auth(webSocket);
     this.User = new User(webSocket);
     this.Chat = new Chat(webSocket);
-    this.Video = new VideoRoute(webSocket);
+    this.Video = new Video(webSocket);
     this.Login = new Login(webSocket);
     this.Signup = new Signup(webSocket);
     this.Pay = new Pay();
     this.Tip = new Tip(webSocket);
+    this.Kick = new Kick(webSocket);
+    this.VideoList = new VideoList(webSocket);
   }
 }
