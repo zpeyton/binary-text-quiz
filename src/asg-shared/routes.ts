@@ -326,6 +326,25 @@ class Purchases extends APIRoute {
   };
 }
 
+class Book extends APIRoute {
+  send = async (body, handleResponse) => {
+    console.log("[API.Book]", this);
+    let request = {
+      method: "post",
+      path: "Book",
+      body,
+    };
+    await this.webSocket.send(request);
+    this.receive = handleResponse;
+  };
+  receive = async (props) => {
+    // console
+    let { result } = props.response.data;
+
+    // this.webSocket.state.setVideoList(result);
+  };
+}
+
 export class Routes {
   webSocket;
   Auth;
@@ -339,6 +358,7 @@ export class Routes {
   Kick;
   VideoList;
   Purchases;
+  Book;
   constructor(webSocket?) {
     this.webSocket = webSocket;
     this.Auth = new Auth(webSocket);
@@ -352,5 +372,6 @@ export class Routes {
     this.Kick = new Kick(webSocket);
     this.VideoList = new VideoList(webSocket);
     this.Purchases = new Purchases(webSocket);
+    this.Book = new Book(webSocket);
   }
 }

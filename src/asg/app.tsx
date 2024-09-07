@@ -33,29 +33,42 @@ import {
   faTowerCell,
   faDollarSign,
   faInfoCircle,
+  faCopyright,
+  faCopy,
 } from "@fortawesome/free-solid-svg-icons";
 import { PaymentUI } from "../asg-shared/tips";
 import moment from "moment";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+// import { setMinutes } from "react-datepicker/dist/date_utils";
+// import * as test from "react-datepicker/dist/date_utils";
+
+// let blah = test.setMinutes(new Date(), 0);
 
 export const App = (props) => {
   console.debug("[Video] App render");
   let [webSocketHost, setWebSocketHost] = useState<any>(props.webSocketHost);
   let [user, setUser] = useState<any>({});
   let [loadDate, setLoadDate] = useState<any>(new Date());
-  let [video, setVideo] = useState(true);
+  let [video, setVideo] = useState(false);
   let [loginNotice, setLoginNotice] = useState<any>("");
   let [signupNotice, setSignupNotice] = useState<any>("Join us");
   let [videoList, setVideoList] = useState<any>([]);
   let [purchased, setPurchasedList] = useState<any>([]);
   let [tab, setTab] = useState<any>("store");
+  let [bookSuccess, setBookSuccess] = useState<any>(false);
   let videoRef = useRef<HTMLVideoElement>();
   let chatRef = useRef<any>();
   let webSocket = useRef<any>();
+  let datePickerRef = useRef<any>();
   let [checkout, setCheckout] = useState({
     product: { videoId: 0, amount: 0 },
   });
   const [page, setPage] = useState("videos");
-
+  const [startDate, setStartDate] = useState(
+    new Date(moment(new Date()).format("YYYY-MM-DD HH:00:00"))
+  );
+  console.log(moment(new Date()).format("YYYY-MM-DD HH:00:00"));
   let cleanupStreamClient = async () => {
     whip.client?.peerConnection?.close();
 
@@ -210,7 +223,6 @@ export const App = (props) => {
   };
 
   const loadPurchases = async () => {
-    console.log("loadPurchases");
     await webSocket.current.api.Purchases.send();
   };
 
@@ -250,8 +262,7 @@ export const App = (props) => {
       },
     });
     if (success) {
-      console.log("Payment success");
-      // do we reload purchases?
+      console.log("Payment success, reload purchases");
       webSocket.current.setState({
         user,
         loginNotice,
@@ -264,6 +275,10 @@ export const App = (props) => {
       loadPurchases();
       setTab("purchased");
     }
+  };
+
+  const bookDateChange = (event) => {
+    console.log("bookDateChange", event);
   };
 
   let logoutClick = (event) => {
@@ -281,19 +296,48 @@ export const App = (props) => {
     );
   };
 
-  // let videos = [
-  //   {
-  //     uid: 1,
-  //     name: "blah",
-  //     thumbnail:
-  //       "https://customer-aria4pdgkvgu9z0v.cloudflarestream.com/672896e889910d6fe3f53b8713cef853/thumbnails/thumbnail.jpg",
-  //   },
-  // ];
-
   let loggedIn = user.type == "member" || user.type == "stream";
   let thumbJpg = "thumbnails/thumbnail.jpg";
 
-  console.log("checkout", checkout);
+  const filterPassedTime = (time) => {
+    const currentDate = new Date();
+    const selectedDate = new Date(time);
+
+    return currentDate.getTime() < selectedDate.getTime();
+  };
+
+  const bookReceive = async (api) => {
+    console.log("[API.bookSuccess]", api);
+    let { response } = api;
+    if (response.status == "OK") {
+      setBookSuccess(true);
+    }
+  };
+
+  const datePickerClick = async (event) => {
+    event.preventDefault();
+    console.log(datePickerRef.current);
+    datePickerRef.current.input.click();
+  };
+
+  const bookClick = async (event) => {
+    console.log("bookClick");
+    event.preventDefault();
+    if (user.type == "guest") {
+      alert("Please login before you book");
+      return;
+    }
+
+    let postBody = {
+      date: startDate,
+      timeZone: `GMT${(new Date().getTimezoneOffset() * -1) / 60} ${
+        Intl.DateTimeFormat().resolvedOptions().timeZone
+      }`,
+    };
+
+    await webSocket.current.api.Book.send(postBody, bookReceive);
+  };
+
   return (
     <div className="page">
       {user.type == "stream" ? null : <>{loginNotice ? <></> : null}</>}
@@ -351,13 +395,14 @@ export const App = (props) => {
                     <img src="https://alohasurfgirls.com/alohasurfgirls.png" />
                     <br />
                     <br />
-                    PO Box 1012, Haleiwa, HI 96712, US
+                    PO Box 1012, Haleiwa, HI 96712
                     <br />
                     <br />
                     808-492-2909
                     <br />
                     <br />
-                    Copyright © 2024 Aloha Surf Girls <br />
+                    Copyright <FontAwesomeIcon icon={faCopyright} /> Aloha Surf
+                    Girls. <br />
                     <br />
                     All Rights Reserved.
                   </div>
@@ -373,10 +418,62 @@ export const App = (props) => {
                 <h1>
                   <FontAwesomeIcon icon={faCalendarAlt} /> Book a session
                 </h1>
-                <p>
-                  Schedule a private session. Pick a date and reserve a time
-                  slot.
-                </p>
+                {bookSuccess ? (
+                  <>
+                    <p>
+                      Thank you for booking. We will be in touch and plan a
+                      session.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      Reserve your time so we can plan a fun and memorable
+                      experience.
+                    </p>
+                    <p>
+                      {/* <DatePicker onChange={bookDateChange} /> */}
+                      <div className="vertcal-center">
+                        <div
+                          className="date-picker-text"
+                          onClick={datePickerClick}
+                        >
+                          Pick a date:
+                        </div>
+                        <FontAwesomeIcon
+                          onClick={datePickerClick}
+                          icon={faCalendarAlt}
+                        />
+                        <DatePicker
+                          ref={datePickerRef}
+                          selected={startDate}
+                          showTimeSelect
+                          timeIntervals={60}
+                          timeFormat="p"
+                          dateFormat="Pp"
+                          filterTime={filterPassedTime}
+                          minDate={new Date()}
+                          onChange={(date) => {
+                            setStartDate(date as any);
+                          }}
+                          icon={<FontAwesomeIcon icon={faInfoCircle} />}
+                        />
+                      </div>
+
+                      <div className="vertcal-center">
+                        <FontAwesomeIcon icon={faInfoCircle} />
+                        <div>
+                          Your timezone is{" "}
+                          {(new Date().getTimezoneOffset() * -1) / 60}{" "}
+                          {Intl.DateTimeFormat().resolvedOptions().timeZone}.
+                        </div>
+                      </div>
+                    </p>
+                    <p>
+                      <button onClick={bookClick}>Book</button>
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           ) : null}
@@ -384,7 +481,10 @@ export const App = (props) => {
           {page == "videos" ? (
             <div className="sub-page">
               <div className="scroll-list">
-                <h1>Videos</h1>
+                <h1>
+                  <FontAwesomeIcon onClick={datePickerClick} icon={faVideo} />{" "}
+                  Videos
+                </h1>
                 <div className="tab-nav">
                   <div className="tabs">
                     <a
@@ -415,6 +515,7 @@ export const App = (props) => {
                         onClick={buyClick}
                       >
                         <iframe
+                          allow="fullscreen"
                           src={`https://${cloudflareSubDomain}/${video.video_id}/watch`}
                         ></iframe>
                       </div>
@@ -456,7 +557,7 @@ export const App = (props) => {
                   ) : null}
                   {videoList.map((video, index) => (
                     <div className="video-list-item" key={video.id}>
-                      <h3>Video {index}</h3>
+                      <h3>{video.name}</h3>
                       <a>{video.price || "$10"}</a>
                       <div
                         className="img-wrap buy"
@@ -465,7 +566,9 @@ export const App = (props) => {
                         onClick={buyClick}
                       >
                         <img
-                          src={`https://${cloudflareSubDomain}/${video.cf_uid}/${thumbJpg}`}
+                          src={`https://${cloudflareSubDomain}/${
+                            video.cf_uid
+                          }/${thumbJpg}?nocache=${new Date().getTime()}`}
                           alt={video.name}
                         />
                       </div>
@@ -490,8 +593,6 @@ export const App = (props) => {
             webSocket={webSocket}
           />
 
-          {page == "account" ? <></> : null}
-
           <Video
             user={user}
             whip={whip}
@@ -502,6 +603,7 @@ export const App = (props) => {
             setVideo={setVideo}
             webSocket={webSocket}
           />
+
           <WebSocketChat
             ref={chatRef}
             user={user}

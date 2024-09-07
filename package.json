@@ -11,6 +11,7 @@
     "deployasg": "rsync -avze ssh ./build/asg/* zapteck:public_html/alohasurfgirls.com/live/",
     "deploy-apple-domain-association": "rsync -avze ssh ./apple-developer-merchantid-domain-association zapteck:public_html/alohasurfgirls.com/.well-known/"
   },
+  "jsx": "react-jsx",
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -19,11 +20,13 @@
     "@intercom/messenger-js-sdk": "^0.0.13",
     "@stripe/react-stripe-js": "^2.8.0",
     "@stripe/stripe-js": "^4.3.0",
+    "@types/react-datepicker": "^7.0.0",
     "dotenv": "^16.0.1",
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
     "path-to-regexp": "^7.1.0",
     "react": "^17.0.2",
+    "react-datepicker": "^7.3.0",
     "react-dom": "^17.0.2",
     "react-moment": "^1.1.3",
     "react-portal": "^4.2.2",

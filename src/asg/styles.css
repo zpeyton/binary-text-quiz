@@ -432,6 +432,10 @@ iframe {
   left: 0;
 }
 
+.reset {
+  display: block;
+}
+
 .tab-nav a {
   color: white;
   padding: 8px 8px 8px 8px;
@@ -507,6 +511,49 @@ iframe {
   display: inline;
 }
 
+.date-picker-text {
+  font-size: 18px;
+}
+
+.react-datepicker-wrapper {
+  margin-top: -6px;
+  height: 30px;
+}
+
+.react-datepicker-wrapper input {
+  margin-top: -2px;
+  margin-left: 20px;
+  padding: 8px 0px 8px 10px;
+  font-size: 18px;
+
+  /* height: 30px; */
+}
+
+.vertcal-center {
+  display: flex;
+  align-items: center;
+  height: 50px;
+}
+
+.vertcal-center > div {
+  /* height: 20px; */
+  /* overflow: hidden; */
+  margin-right: 10px;
+}
+
+p .svg-inline--fa.fa-calendar-days {
+  height: 30px;
+  width: 30px;
+  margin-left: 10px;
+}
+
+p .svg-inline--fa.fa-circle-info {
+  /* height: 30px;
+  width: 30px; */
+  margin-top: 2px;
+  margin-right: 8px;
+}
+
 @media only screen and (max-width: 450px) {
   /* .binary {
     font-size: 25px;
@@ -516,6 +563,9 @@ iframe {
   .new-letter {
     font-size: 25px;
   } */
+  .date-picker-text {
+    display: none;
+  }
 }
 
 @supports (height: 100dvh) {
