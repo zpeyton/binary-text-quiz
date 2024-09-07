@@ -202,10 +202,16 @@ export const App = (props) => {
     });
 
     loadVideos();
+    loadPurchases();
   }, [user]);
 
   const loadVideos = async () => {
     await webSocket.current.api.VideoList.send();
+  };
+
+  const loadPurchases = async () => {
+    console.log("loadPurchases");
+    await webSocket.current.api.Purchases.send();
   };
 
   const handleNavClick = (page) => {
@@ -246,6 +252,17 @@ export const App = (props) => {
     if (success) {
       console.log("Payment success");
       // do we reload purchases?
+      webSocket.current.setState({
+        user,
+        loginNotice,
+        chatRef,
+        videoRef,
+        setVideoList,
+        setPurchasedList,
+      });
+
+      loadPurchases();
+      setTab("purchased");
     }
   };
 

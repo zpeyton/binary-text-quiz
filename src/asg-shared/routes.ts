@@ -305,8 +305,23 @@ class VideoList extends APIRoute {
   receive = async (props) => {
     // console
     let { results: videos } = props.response.data.videos;
-    let { results: purchases } = props.response.data.purchases;
     this.webSocket.state.setVideoList(videos);
+  };
+}
+
+class Purchases extends APIRoute {
+  send = async () => {
+    console.log("[API.Purchases]", this);
+    let request = {
+      method: "get",
+      path: "Purchases",
+    };
+    await this.webSocket.send(request);
+  };
+  receive = async (props) => {
+    // console
+    let { results: purchases } = props.response.data.purchases;
+    console.log("got purchases", purchases);
     this.webSocket.state.setPurchasedList(purchases);
   };
 }
@@ -323,6 +338,7 @@ export class Routes {
   Tip;
   Kick;
   VideoList;
+  Purchases;
   constructor(webSocket?) {
     this.webSocket = webSocket;
     this.Auth = new Auth(webSocket);
@@ -335,5 +351,6 @@ export class Routes {
     this.Tip = new Tip(webSocket);
     this.Kick = new Kick(webSocket);
     this.VideoList = new VideoList(webSocket);
+    this.Purchases = new Purchases(webSocket);
   }
 }
