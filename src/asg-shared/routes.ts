@@ -345,6 +345,42 @@ class Book extends APIRoute {
   };
 }
 
+class ForgotPass extends APIRoute {
+  send = async (body, handleResponse) => {
+    console.log("[API.ForgotPass]", this);
+    let request = {
+      method: "post",
+      path: "ForgotPass",
+      body,
+    };
+    await this.webSocket.send(request);
+    this.receive = handleResponse;
+  };
+  // receive = async (props) => {
+  //   // console
+  //   // let { result } = props.response.data.videos;
+  //   // this.webSocket.state.setVideoList(result);
+  // };
+}
+
+class ResetPass extends APIRoute {
+  send = async (body, handleResponse) => {
+    console.log("[API.ResetPass]", this);
+    let request = {
+      method: "post",
+      path: "ResetPass",
+      body,
+    };
+    await this.webSocket.send(request);
+    this.receive = handleResponse;
+  };
+  // receive = async (props) => {
+  //   // console
+  //   // let { result } = props.response.data.videos;
+  //   // this.webSocket.state.setVideoList(result);
+  // };
+}
+
 export class Routes {
   webSocket;
   Auth;
@@ -359,6 +395,8 @@ export class Routes {
   VideoList;
   Purchases;
   Book;
+  ForgotPass;
+  ResetPass;
   constructor(webSocket?) {
     this.webSocket = webSocket;
     this.Auth = new Auth(webSocket);
@@ -373,5 +411,7 @@ export class Routes {
     this.VideoList = new VideoList(webSocket);
     this.Purchases = new Purchases(webSocket);
     this.Book = new Book(webSocket);
+    this.ForgotPass = new ForgotPass(webSocket);
+    this.ResetPass = new ResetPass(webSocket);
   }
 }

@@ -47,11 +47,14 @@ import "react-datepicker/dist/react-datepicker.css";
 
 export const App = (props) => {
   console.debug("[Video] App render");
+  let query = new URLSearchParams(document.location.search);
   let [webSocketHost, setWebSocketHost] = useState<any>(props.webSocketHost);
   let [user, setUser] = useState<any>({});
   let [loadDate, setLoadDate] = useState<any>(new Date());
   let [video, setVideo] = useState(false);
-  let [loginNotice, setLoginNotice] = useState<any>("");
+  let [loginNotice, setLoginNotice] = useState<any>(
+    query.get("reset-pass") || ""
+  );
   let [signupNotice, setSignupNotice] = useState<any>("Join us");
   let [videoList, setVideoList] = useState<any>([]);
   let [purchased, setPurchasedList] = useState<any>([]);
@@ -64,6 +67,9 @@ export const App = (props) => {
   let [checkout, setCheckout] = useState({
     product: { videoId: 0, amount: 0 },
   });
+
+  let [resetPass, setResetPass] = useState(query.get("reset-pass"));
+
   const [page, setPage] = useState("account");
   const [startDate, setStartDate] = useState(
     new Date(moment(new Date()).format("YYYY-MM-DD HH:00:00"))
@@ -600,6 +606,7 @@ export const App = (props) => {
             signupNotice={signupNotice}
             setLoginNotice={setLoginNotice}
             webSocket={webSocket}
+            resetPass={resetPass}
           />
 
           <Video
@@ -622,6 +629,10 @@ export const App = (props) => {
           />
         </>
       ) : null}
+      <script
+        async
+        src="https://www.googletagmanager.com/gtag/js?id=G-QXGKY47WPR"
+      ></script>
     </div>
   );
 };
