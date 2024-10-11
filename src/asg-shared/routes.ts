@@ -381,6 +381,24 @@ class ResetPass extends APIRoute {
   // };
 }
 
+class ClearChat extends APIRoute {
+  send = async (body, handleResponse) => {
+    console.log("[API.ClearChat]", this);
+    let request = {
+      method: "post",
+      path: "ClearChat",
+      body,
+    };
+    await this.webSocket.send(request);
+    this.receive = handleResponse;
+  };
+  // receive = async (props) => {
+  //   // console
+  //   // let { result } = props.response.data.videos;
+  //   // this.webSocket.state.setVideoList(result);
+  // };
+}
+
 export class Routes {
   webSocket;
   Auth;
@@ -397,6 +415,7 @@ export class Routes {
   Book;
   ForgotPass;
   ResetPass;
+  ClearChat;
   constructor(webSocket?) {
     this.webSocket = webSocket;
     this.Auth = new Auth(webSocket);
@@ -413,5 +432,6 @@ export class Routes {
     this.Book = new Book(webSocket);
     this.ForgotPass = new ForgotPass(webSocket);
     this.ResetPass = new ResetPass(webSocket);
+    this.ClearChat = new ClearChat(webSocket);
   }
 }

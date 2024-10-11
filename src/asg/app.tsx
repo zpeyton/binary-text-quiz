@@ -57,6 +57,7 @@ export const App = (props) => {
   );
   let [signupNotice, setSignupNotice] = useState<any>("Join us");
   let [videoList, setVideoList] = useState<any>([]);
+  let [consent, setConsent] = useState<any>(false);
   let [purchased, setPurchasedList] = useState<any>([]);
   let [tab, setTab] = useState<any>("store");
   let [bookSuccess, setBookSuccess] = useState<any>(false);
@@ -200,6 +201,10 @@ export const App = (props) => {
   useEffect(() => {
     // console.log("[UseEffect] APP");
     initWebSocket();
+    let cacheConsent = localStorage.getItem("consent");
+    if (cacheConsent) {
+      setConsent(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -324,6 +329,17 @@ export const App = (props) => {
     event.preventDefault();
     console.log(datePickerRef.current);
     datePickerRef.current.input.click();
+  };
+
+  const consentClick = async (event) => {
+    event.preventDefault();
+    localStorage.setItem("consent", "true");
+    setConsent(true);
+  };
+
+  const exitClick = async (event) => {
+    event.preventDefault();
+    window.location.href = "https://google.com";
   };
 
   const bookClick = async (event) => {
@@ -627,6 +643,18 @@ export const App = (props) => {
             videoRef={videoRef}
             webSocket={webSocket}
           />
+          {consent ? null : (
+            <div className="consent">
+              <div className="consent-message">
+                <button className="btn" onClick={exitClick}>
+                  Exit
+                </button>{" "}
+                <button className="btn btn-warning" onClick={consentClick}>
+                  I am over 18 years old
+                </button>
+              </div>
+            </div>
+          )}
         </>
       ) : null}
       <script

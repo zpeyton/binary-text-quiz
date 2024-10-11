@@ -152,6 +152,12 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
     }
   };
 
+  const clearChat = async (event?) => {
+    event?.preventDefault();
+
+    props.webSocket.current.api.ClearChat.send({ clear: "clear" });
+  };
+
   //console.debug("[WS] Render");
   let viewers = members.filter(
     (item) => item.joined != "alohasurfgirls" && item.joined != "zap"
@@ -180,6 +186,11 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
           <button className="toggle" onClick={toggle}>
             <FontAwesomeIcon icon={faComment} />
           </button>
+          {props.user.type == "stream" ? (
+            <button className="toggle" onClick={clearChat}>
+              Clear Chat
+            </button>
+          ) : null}
         </div>
 
         <div className={"chat-log " + display} ref={chatLog as any}>

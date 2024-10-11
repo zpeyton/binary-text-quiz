@@ -158,6 +158,10 @@ export const Video = (props) => {
           Link: {videoLink}
         </>
       ) : null}
+      <img
+        className="water-mark"
+        src="https://alohasurfgirls.com/alohasurfgirls.png"
+      />
       {props.video ? null : (
         <>
           <div className="loading-video">
