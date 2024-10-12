@@ -61,7 +61,7 @@ video {
   padding-right: 20px;
   padding-bottom: 20px;
   position: fixed;
-  top: 0px;
+  top: 40px;
   left: 0px;
   z-index: 3;
   background-color: rgb(242, 97, 147);
@@ -115,9 +115,9 @@ input[name="tip-amount"] {
   position: absolute;
   display: flex;
   /* align-items: center; */
-  justify-content: center;
+  /* justify-content: center; */
   top: 0px;
-  left: calc(50% - 50px);
+  left: 10px;
   width: 100px;
   opacity: 0.5;
   z-index: 9999;
@@ -138,7 +138,7 @@ h2.payment {
 .volume-toggle,
 .camera-toggle {
   position: absolute;
-  top: 26px;
+  top: 76px;
   left: 10px;
   z-index: 1;
 }
@@ -165,7 +165,7 @@ h2.payment {
 .waiting {
   position: fixed;
   width: 100vw;
-  padding: 34px 0px;
+  padding: 64px 0px 34px 0px;
   background-color: rgb(242, 97, 147);
   display: grid;
   grid-template-columns: minmax(auto, 50%) auto;
@@ -367,7 +367,7 @@ svg {
 .viewers {
   padding-left: 10px;
   padding-bottom: 10px;
-  height: 50px;
+  height: 54px;
   overflow: auto;
 }
 
@@ -379,7 +379,7 @@ svg {
   position: absolute;
   /* height: calc(100vh - 60px);
   overflow: auto; */
-  top: 20px;
+  top: 40px;
   overflow: hidden;
   z-index: 5;
   background-color: rgb(242, 97, 147);

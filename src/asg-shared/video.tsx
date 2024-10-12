@@ -19,7 +19,6 @@ export const Video = (props) => {
     }
     console.log("props.videoRef.current", props.videoRef.current);
     // event.currentTarget = text;
-
     props.videoRef.current.muted = props.videoRef.current.muted ? false : true;
     setMuted(props.videoRef.current.muted);
   };
@@ -32,6 +31,7 @@ export const Video = (props) => {
     console.debug("[Video]", "[useEffect]", "no deps");
 
     //props.setVideo(true);
+    props.videoRef.current.defaultMuted = true;
 
     if (props.whep.client) {
       console.debug("[Video] Update video element");
@@ -144,11 +144,11 @@ export const Video = (props) => {
       <video
         ref={props.videoRef as any}
         id="watch"
-        autoPlay={true}
-        // controls={true}
-        playsInline={true}
+        muted
+        autoPlay
+        // controls
+        playsInline
         style={props.user.type == "stream" ? { transform: "scale(-1, 1)" } : {}}
-        muted={true}
       ></video>
       {props.user.username == "testuser" ? (
         <>
