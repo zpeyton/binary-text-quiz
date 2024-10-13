@@ -42,6 +42,21 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
     setChats(chats.concat([json]));
   };
 
+  const deleteChat = (event) => {
+    // console.log("[WS]", "newChat", chats);
+    event?.preventDefault();
+    let sure = confirm("Are you sure you want to delete this chat message?");
+    if (!sure) {
+      return;
+    }
+    let key = event.target.getAttribute("rel");
+
+    props.webSocket.current.api.DeleteChat.send({ key });
+    // let filtered = chats.filter((chats) => chats.timestamp != key);
+    // // console.log("filtered", filtered);
+    // setChats(filtered);
+  };
+
   const removeDupsFromObjectArray = (arr, propName) => {
     const props = arr.map((item) => item[propName]);
     // console.log("[useEffect members]", users);
@@ -89,6 +104,10 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
   useEffect(() => {
     chatLog.current?.scrollTo(0, chatLog.current.scrollHeight);
     //inputChat.current?.focus();
+    props.webSocket.current.setState({
+      chats,
+      setChats,
+    });
   }, [chats]);
 
   useEffect(() => {
@@ -110,7 +129,7 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
     props.webSocket.current.api.Kick.send({ kick });
   };
 
-  let isAdmin = props.user.type == "stream";
+  let isAdmin = props.user.type == "stream" || props.user.type == "mod";
 
   let Kick = (props) => {
     return isAdmin ? (
@@ -197,10 +216,15 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
           {chats &&
             chats.map((item, index) => {
               return (
-                <div key={index}>
+                <div key={index} rel={item.timestamp}>
                   <span>{item.name}</span>
                   <span>:</span>
                   <span>{item.message}</span>
+                  {props.user.type == "stream" || props.user.type == "mod" ? (
+                    <button rel={item.timestamp} onClick={deleteChat}>
+                      X
+                    </button>
+                  ) : null}
                 </div>
               );
             })}

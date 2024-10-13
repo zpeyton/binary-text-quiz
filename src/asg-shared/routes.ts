@@ -399,6 +399,30 @@ class ClearChat extends APIRoute {
   // };
 }
 
+class DeleteChat extends APIRoute {
+  send = async (body, handleResponse) => {
+    console.log("[API.DeleteChat]", this);
+    let request = {
+      method: "post",
+      path: "DeleteChat",
+      body,
+    };
+    await this.webSocket.send(request);
+    //this.receive = handleResponse;
+  };
+  receive = async (props) => {
+    // console
+    let { ws, response } = props;
+    let { chats, setChats } = ws.state;
+    let { key } = response.data;
+    console.log("[API.DeleteChat.receive] response ", response);
+    // this.webSocket.state.setVideoList(result);
+    let filtered = chats.filter((chats) => chats.timestamp != key);
+    console.log("filtered", filtered);
+    setChats(filtered);
+  };
+}
+
 export class Routes {
   webSocket;
   Auth;
@@ -416,6 +440,7 @@ export class Routes {
   ForgotPass;
   ResetPass;
   ClearChat;
+  DeleteChat;
   constructor(webSocket?) {
     this.webSocket = webSocket;
     this.Auth = new Auth(webSocket);
@@ -433,5 +458,6 @@ export class Routes {
     this.ForgotPass = new ForgotPass(webSocket);
     this.ResetPass = new ResetPass(webSocket);
     this.ClearChat = new ClearChat(webSocket);
+    this.DeleteChat = new DeleteChat(webSocket);
   }
 }
