@@ -21,7 +21,7 @@ p {
   color: white;
   margin: 20px 0;
   word-wrap: break-word;
-  word-break: break-all;
+  /* word-break: break-all; */
 }
 
 .consent {
@@ -274,7 +274,7 @@ svg {
 .chat-log > div {
   padding: 4px 10px;
   display: grid;
-  grid-template-columns: auto 18px 12fr;
+  grid-template-columns: auto 18px 12fr 30px;
   /* background-color: #ccc; */
   /* gap: 10px; */
 }
@@ -364,10 +364,21 @@ svg {
   color: white; /* Ensure the icons are white */
 }
 
+.audioStyle {
+  position: absolute;
+  z-index: 1;
+  top: 100px;
+}
+
+.go-private {
+  padding-left: 10px;
+  padding-bottom: 10px;
+}
+
 .viewers {
   padding-left: 10px;
   padding-bottom: 10px;
-  height: 54px;
+  height: 51px;
   overflow: auto;
 }
 

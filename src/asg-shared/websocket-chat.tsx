@@ -33,9 +33,26 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
 
   let [display, setDisplay] = useState<any>("");
   let [twoevencols, setTwoevencols] = useState<any>(false);
+  let [privateSession, setPrivateSession] = useState<any>(
+    props.user.private ? true : false
+  );
   let inputChat = useRef<HTMLInputElement>();
   let btnSendChat = useRef<HTMLAnchorElement>();
   let chatLog = useRef<HTMLDivElement>();
+  let privateUsernameRef = useRef<any>();
+
+  const goPrivateClick = async (event) => {
+    event.preventDefault();
+    let username = privateUsernameRef.current.value;
+    props.webSocket.current.api.GoPrivate.send({ username });
+    // setPrivateSession(true);
+  };
+
+  const endPrivateClick = async (event) => {
+    event.preventDefault();
+    props.webSocket.current.api.EndPrivate.send({});
+    // setPrivateSession(true);
+  };
 
   const newChat = (json) => {
     // console.log("[WS]", "newChat", chats);
@@ -83,6 +100,28 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
     toggle() {
       toggle();
     },
+
+    togglePrivate(username) {
+      console.log("togglePrivate", username);
+      if (username) {
+        console.log("togglePrivate props.user.private", props.user.private);
+        props.user.private = username;
+        props.setUser(props.user);
+
+        newChat({
+          name: "Server",
+          message: "Private session started.",
+          timestamp: new Date(),
+        });
+      } else {
+        props.user.private = null;
+        props.setUser(props.user);
+      }
+      console.log("end togglePrivate", props.user.private);
+      setPrivateSession(username ? true : false);
+      // console.log("end togglePrivate", privateSession ? false : true);
+    },
+
     toggleTwoevencols() {
       toggleTwoevencols();
     },
@@ -177,30 +216,60 @@ export const WebSocketChat = forwardRef((props: any, ref) => {
     props.webSocket.current.api.ClearChat.send({ clear: "clear" });
   };
 
-  //console.debug("[WS] Render");
+  console.debug(
+    "[WS] Render chat privateSession",
+    privateSession,
+    "props.user",
+    props.user
+  );
   let viewers = members.filter(
     (item) => item.joined != "alohasurfgirls" && item.joined != "zap"
   );
   return (
     <>
       <div className={"chat-ui"}>
-        <div className="viewers">
-          {members.length ? (
-            <>
-              <FontAwesomeIcon icon={faUser} /> {viewers.length}
-            </>
-          ) : null}
-          {members &&
-            members.map((item, index) => {
-              return (
-                <div key={index}>
-                  <div>
-                    {item.joined} <Kick username={item.joined} />
+        {props.user.type == "stream" || props.user.type == "mod" ? (
+          <div className="go-private">
+            <select ref={privateUsernameRef} defaultValue={props.user.private}>
+              {members &&
+                members.map((item, index) => {
+                  if (item.joined != props.user.username) {
+                    return <option key={index}>{item.joined}</option>;
+                  }
+                })}
+            </select>{" "}
+            {props.user.private
+              ? `Feed is private for ${props.user.private} `
+              : null}
+            {/* {props.user.private ? `private ${privateSession}` : "public"} */}
+            {privateSession ? (
+              <button onClick={endPrivateClick}>End Private</button>
+            ) : (
+              <button onClick={goPrivateClick}>Go Private</button>
+            )}
+          </div>
+        ) : null}
+
+        {privateSession ? null : (
+          <div className="viewers">
+            {members.length ? (
+              <>
+                <FontAwesomeIcon icon={faUser} /> {viewers.length}
+              </>
+            ) : null}
+            {members &&
+              members.map((item, index) => {
+                return (
+                  <div key={index}>
+                    <div>
+                      {item.joined} <Kick username={item.joined} />
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-        </div>
+                );
+              })}
+          </div>
+        )}
+
         <div className="controls">
           <button className="toggle" onClick={toggle}>
             <FontAwesomeIcon icon={faComment} />

@@ -31,7 +31,7 @@ export const Video = (props) => {
     console.debug("[Video]", "[useEffect]", "no deps");
 
     //props.setVideo(true);
-    props.videoRef.current.defaultMuted = true;
+    // props.videoRef.current.defaultMuted = true;
 
     if (props.whep.client) {
       console.debug("[Video] Update video element");

@@ -49,7 +49,11 @@ export class WHIP {
         height: 720,
         // frameRate: { min: 20, ideal: 24, max: 24 },
       },
-      audio: true,
+      audio: {
+        autoGainControl: false,
+        echoCancellation: false,
+        noiseSuppression: false,
+      },
     };
 
     // console.debug("[WHIP.init]", constraints);

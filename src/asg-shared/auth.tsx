@@ -311,7 +311,8 @@ export const AuthUI = (props) => {
     );
   };
 
-  let loggedIn = user.type == "member" || user.type == "stream";
+  let loggedIn =
+    user.type == "member" || user.type == "stream" || user.type == "mod";
 
   return loggedIn ? (
     <></>

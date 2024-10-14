@@ -65,6 +65,7 @@ export const App = (props) => {
   let chatRef = useRef<any>();
   let webSocket = useRef<any>();
   let datePickerRef = useRef<any>();
+
   let [checkout, setCheckout] = useState({
     product: { videoId: 0, amount: 0 },
   });
@@ -75,6 +76,7 @@ export const App = (props) => {
   const [startDate, setStartDate] = useState(
     new Date(moment(new Date()).format("YYYY-MM-DD HH:00:00"))
   );
+
   console.log(moment(new Date()).format("YYYY-MM-DD HH:00:00"));
   let cleanupStreamClient = async () => {
     whip.client?.peerConnection?.close();
@@ -88,6 +90,7 @@ export const App = (props) => {
     event.preventDefault();
     setTab(event.target.getAttribute("href"));
   };
+
   let initWebSocket = async () => {
     let reload = await checkBundleUpdate(loadDate);
     if (reload) {
@@ -307,7 +310,8 @@ export const App = (props) => {
     );
   };
 
-  let loggedIn = user.type == "member" || user.type == "stream";
+  let loggedIn =
+    user.type == "member" || user.type == "stream" || user.type == "mod";
   let thumbJpg = "thumbnails/thumbnail.jpg";
 
   const filterPassedTime = (time) => {
@@ -616,6 +620,15 @@ export const App = (props) => {
             </div>
           ) : null}
 
+          {user.type == "stream" || user.type == "mod" ? (
+            <audio controls className="audioStyle">
+              <source
+                src="https://alohasurfgirls.com/live/Girls.m4a"
+                type="audio/mp4"
+              ></source>
+            </audio>
+          ) : null}
+
           <AuthUI
             user={user}
             loginNotice={loginNotice}
@@ -639,10 +652,12 @@ export const App = (props) => {
           <WebSocketChat
             ref={chatRef}
             user={user}
+            setUser={setUser}
             whip={whip}
             videoRef={videoRef}
             webSocket={webSocket}
           />
+
           {consent ? null : (
             <div className="consent">
               <div className="consent-message">

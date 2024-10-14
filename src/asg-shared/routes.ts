@@ -423,6 +423,62 @@ class DeleteChat extends APIRoute {
   };
 }
 
+class GoPrivate extends APIRoute {
+  send = async (body, handleResponse) => {
+    console.log("[API.GoPrivate]", this);
+    let request = {
+      method: "post",
+      path: "GoPrivate",
+      body,
+    };
+    await this.webSocket.send(request);
+    //this.receive = handleResponse;
+  };
+  receive = async (props) => {
+    // console
+    let { ws, response } = props;
+    let { user, videoRef, chatRef } = ws.state;
+    let { username } = response.data;
+    console.log("[API.GoPrivate.receive] response", response);
+    if (user.username == username) {
+    }
+
+    if (user.username != username && user.type != "stream") {
+      videoRef.current.srcObject = null;
+    }
+    // toggle private
+    chatRef.current.togglePrivate(username);
+  };
+}
+
+class EndPrivate extends APIRoute {
+  send = async (body, handleResponse) => {
+    console.log("[API.EndPrivate]", this);
+    let request = {
+      method: "post",
+      path: "EndPrivate",
+      body,
+    };
+    await this.webSocket.send(request);
+    //this.receive = handleResponse;
+  };
+  receive = async (props) => {
+    // console
+    let { ws, response } = props;
+    console.log("[API.EndPrivate.receive]");
+    let { user, chatRef } = ws.state;
+
+    console.log("[API.EndPrivate.receive] user.type");
+
+    if (user.type == "stream" || user.type == "mod") {
+      //
+    } else {
+      window.location.reload();
+    }
+    chatRef.current.togglePrivate();
+  };
+}
+
 export class Routes {
   webSocket;
   Auth;
@@ -441,6 +497,8 @@ export class Routes {
   ResetPass;
   ClearChat;
   DeleteChat;
+  GoPrivate;
+  EndPrivate;
   constructor(webSocket?) {
     this.webSocket = webSocket;
     this.Auth = new Auth(webSocket);
@@ -459,5 +517,7 @@ export class Routes {
     this.ResetPass = new ResetPass(webSocket);
     this.ClearChat = new ClearChat(webSocket);
     this.DeleteChat = new DeleteChat(webSocket);
+    this.GoPrivate = new GoPrivate(webSocket);
+    this.EndPrivate = new EndPrivate(webSocket);
   }
 }
